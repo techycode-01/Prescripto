@@ -221,10 +221,21 @@ The frontend communicates with the backend via **Axios**.
 
 ## 13. Future Improvements
 
+### 🏗 DevOps & Infrastructure
+*   **CI/CD Pipelines**: Automated testing and deployment workflows using GitHub Actions.
+*   **Docker Support**: Containerized environment for consistent deployment.
+
+### 🛡️ Security & Scalability
+*   **Two-Factor Authentication (2FA)**: Added security layer for Doctors and Admins.
+*   **Redis Caching**: Performance optimization for high-traffic endpoints.
+*   **Audit Logging**: Comprehensive admin activity tracking.
+
+### 🧩 Feature Expansion
 *   **Telemedicine**: Integration of WebRTC for video consultations.
 *   **Prescriptions**: Digital prescription generation and PDF download.
 *   **Chat System**: Real-time chat between doctor and patient.
-*   **Notifications**: Email/SMS reminders for upcoming appointments.
+*   **Notifications**: SMS/Email reminders for upcoming appointments via Twilio/SendGrid(maybe).
+*   **Multi-language Support**: i18n integration for global accessibility.
 
 ## 14. License
 
