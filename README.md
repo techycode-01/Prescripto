@@ -9,9 +9,11 @@
 
 ## 1. Project Overview
 
-**Prescripto** is an enterprise-grade, full-stack healthcare appointment booking platform designed to bridge the gap between patients and medical professionals. Built on the robust **MERN Stack** (MongoDB, Express.js, React.js, Node.js), it offers a seamless interface for patients to discover doctors, manage appointments, and maintain health records, while providing a comprehensive dashboard for doctors and administrators to streamline clinic operations.
+**Prescripto** is an enterprise-grade, full-stack healthcare doctor appointment booking platform designed to bridge the gap between patients and medical professionals. Built on the robust **MERN Stack** (MongoDB, Express.js, React.js, Node.js), it offers a seamless interface for patients to discover doctors, manage appointments, and maintain health records, while providing a comprehensive dashboard for doctors and administrators to streamline clinic operations.
 
 This repository takes a "monorepo-style" approach, housing the Backend API, Patient Frontend, and Admin Panel within a single codebase for unified development and version control.
+
+The application also integrates an online payment gateway, allowing patients to securely pay consultation fees during booking. Designed as a scalable and customizable solution, this project can be used by clinics or hospitals.
 
 ## 2. Problem Statement & Purpose
 
@@ -23,6 +25,8 @@ In the traditional healthcare landscape, booking appointments often involves pho
 *   **Role-Based Access**: Distinct workflows for Patients (discovery & booking), Doctors (schedule management), and Admins (system oversight).
 
 ## 3. Key Features
+
+The system supports three levels of authentication: **Patients**, who can register, log in, book and manage appointments; **Doctors**, who can view scheduled appointments, track earnings, and update their profiles through a dedicated dashboard; and an **Admin**, who oversees the entire platform by managing doctors and appointments.
 
 ### 🏥 Patient Portal (<a href="https://prescripto-dev.netlify.app" target="_blank">Live Demo</a>)
 *   **Doctor Discovery**: Advanced filtering by speciality, experience, and fees.
