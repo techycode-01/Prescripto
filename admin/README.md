@@ -1,6 +1,6 @@
 # Prescripto - Admin Dashboard (React)
 
-![Prescripto Banner](../frontend/public/prescripto-adminBanner.png)
+![Prescripto Banner](../admin/public/prescripto-adminBanner.png)
 
 <p align="center">
   <a href="https://prescripto-adminpanel.netlify.app" target="_blank" rel="noopener noreferrer"><strong>Live Admin Panel</strong></a>
