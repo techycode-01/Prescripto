@@ -24,19 +24,19 @@ In the traditional healthcare landscape, booking appointments often involves pho
 
 ## 3. Key Features
 
-### 🏥 Patient Portal
+### 🏥 Patient Portal ([Live Demo](https://prescripto-dev.netlify.app))
 *   **Doctor Discovery**: Advanced filtering by speciality, experience, and fees.
 *   **Real-time Booking**: Interactive slot selection based on doctor availability.
 *   **Secure Authentication**: JWT-based login and registration.
 *   **Profile Management**: Update personal details and medical history visibility.
 *   **Payment Integration**: Secure payment gateway integration (Razorpay) for booking fees.
 
-### 👨‍⚕️ Doctor Dashboard
+### 👨‍⚕️ Doctor Dashboard ([Live Demo](https://prescripto-adminpanel.netlify.app))
 *   **Appointment Management**: Accept, cancel, or complete patient appointments.
 *   **Schedule Control**: Dynamic availability setting to manage practicing hours.
 *   **Financial Overview**: Track earnings and completed consultations.
 
-### 🛡️ Admin Panel
+### 🛡️ Admin Panel ([Live Demo](https://prescripto-adminpanel.netlify.app))
 *   **Provider Onboarding**: Add and verify new doctors and their credentials.
 *   **System Analytics**: View total appointments, active doctors, and patient registrations.
 *   **Global Management**: Override controls for users and appointments.
