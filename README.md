@@ -237,6 +237,13 @@ The frontend communicates with the backend via **Axios**.
 *   **Notifications**: SMS/Email reminders for upcoming appointments via Twilio/SendGrid(maybe).
 *   **Multi-language Support**: i18n integration for global accessibility.
 
+### 🤖 AI & Machine Learning
+*   **AI Symptom Checker**: Preliminary diagnosis tool suggesting specialities based on patient symptoms.
+
+### 📊 Analytics & Business
+*   **Advanced Analytics**: Interactive charts for doctor performance, patient trends, and revenue.
+*   **Subscription Models**: Tiered access for patients (Premium support) and doctors (Featured listings).
+
 ## 14. License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
