@@ -2,6 +2,11 @@
 
 ![Prescripto Banner](frontend/public/prescripto-banner.png)
 
+<p align="center">
+  <a href="https://prescripto-dev.netlify.app"><strong>Live Patient App</strong></a> &nbsp;&nbsp;|&nbsp;&nbsp; 
+  <a href="https://prescripto-adminpanel.netlify.app"><strong>Live Admin Panel</strong></a>
+</p>
+
 ## 1. Project Overview
 
 **Prescripto** is an enterprise-grade, full-stack healthcare appointment booking platform designed to bridge the gap between patients and medical professionals. Built on the robust **MERN Stack** (MongoDB, Express.js, React.js, Node.js), it offers a seamless interface for patients to discover doctors, manage appointments, and maintain health records, while providing a comprehensive dashboard for doctors and administrators to streamline clinic operations.
