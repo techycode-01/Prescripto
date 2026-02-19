@@ -1,12 +1,64 @@
-# React + Vite
+# Prescripto - Patient Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The **Patient Frontend** is the user-facing interface of the Prescripto application. Built with **React** and **Vite**, it allows patients to browse doctors, book appointments, manage their profiles, and view their appointment history.
 
-Currently, two official plugins are available:
+## 🚀 Getting Started
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### Prerequisites
+- Node.js (v16+)
+- npm or yarn
 
-## Expanding the ESLint configuration
+### Installation
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+1.  Navigate to the directory:
+    ```bash
+    cd frontend
+    ```
+
+2.  Install dependencies:
+    ```bash
+    npm install
+    ```
+
+### Environment Variables
+
+Create a `.env` file in the `frontend` root directory:
+
+```env
+VITE_BACKEND_URL=http://localhost:4000
+RAZORPAY_KEY_ID=your_razorpay_key_id
+```
+
+### Running the App
+
+Start the development server:
+
+```bash
+npm run dev
+```
+The app will be available at `http://localhost:5173`.
+
+## 📜 Scripts
+
+| Script | Description |
+| :--- | :--- |
+| `npm run dev` | Starts the development server with Vite. |
+| `npm run build` | Builds the app for production. |
+| `npm run lint` | Runs ESLint to check for code quality issues. |
+| `npm run preview` | Previews the production build locally. |
+
+## 🛠️ Tech Stack
+
+-   **Framework**: React (v19)
+-   **Build Tool**: Vite
+-   **Styling**: Tailwind CSS (v4)
+-   **Routing**: React Router DOM (v7)
+-   **HTTP Client**: Axios
+-   **Notifications**: React Toastify
+
+## 📂 Key Directories
+
+-   `src/pages`: Individual page components (Home, Doctors, Login, etc.).
+-   `src/components`: Reusable UI components (Navbar, TopDoctors).
+-   `src/context`: Global state management via Context API.
+-   `src/assets`: Static images and icons.

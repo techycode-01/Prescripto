@@ -1,16 +1,63 @@
-# React + Vite
+# Prescripto - Admin Panel
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The **Admin Panel** is a dashboard for administrators and doctors to manage the Prescripto platform. It provides tools for appointment scheduling, doctor profile management, and system-wide settings.
 
-Currently, two official plugins are available:
+## 🚀 Getting Started
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### Prerequisites
+- Node.js (v16+)
+- npm or yarn
 
-## React Compiler
+### Installation
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1.  Navigate to the directory:
+    ```bash
+    cd admin
+    ```
 
-## Expanding the ESLint configuration
+2.  Install dependencies:
+    ```bash
+    npm install
+    ```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Environment Variables
+
+Create a `.env` file in the `admin` root directory:
+
+```env
+VITE_BACKEND_URL=http://localhost:4000
+```
+
+### Running the App
+
+Start the development server:
+
+```bash
+npm run dev
+```
+The app will be available at `http://localhost:5174` (or the next available port).
+
+## 📜 Scripts
+
+| Script | Description |
+| :--- | :--- |
+| `npm run dev` | Starts the development server with Vite. |
+| `npm run build` | Builds the app for production. |
+| `npm run lint` | Runs ESLint to check for code quality issues. |
+| `npm run preview` | Previews the production build locally. |
+
+## 🛠️ Tech Stack
+
+-   **Framework**: React (v19)
+-   **Build Tool**: Vite
+-   **Styling**: Tailwind CSS (v3)
+-   **Routing**: React Router DOM (v7)
+-   **State Management**: Context API (`AdminContext`, `DoctorContext`)
+-   **Notifications**: React Toastify
+
+## 📂 Key Directories
+
+-   `src/context`: Contains `AdminContext` and `DoctorContext` for managing role-specific state.
+-   `src/pages/Admin`: specialized pages for Admin role (`Dashboard`, `AllAppointments`, `AddDoctor`, `DoctorsList`).
+-   `src/pages/Doctor`: specialized pages for Doctor role (`DoctorDashboard`, `DoctorAppointments`, `DoctorProfile`).
+-   `src/components`: UI components like `Sidebar`, `Navbar`.
