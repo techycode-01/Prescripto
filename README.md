@@ -3,8 +3,8 @@
 ![Prescripto Banner](frontend/public/prescripto-banner.png)
 
 <p align="center">
-  <a href="https://prescripto-dev.netlify.app"><strong>Live Patient App</strong></a> &nbsp;&nbsp;|&nbsp;&nbsp; 
-  <a href="https://prescripto-adminpanel.netlify.app"><strong>Live Admin Panel</strong></a>
+  <a href="https://prescripto-dev.netlify.app" target="_blank" rel="noopener noreferrer"><strong>Live Patient App</strong></a> &nbsp;&nbsp;|&nbsp;&nbsp; 
+  <a href="https://prescripto-adminpanel.netlify.app" target="_blank" rel="noopener noreferrer"><strong>Live Admin Panel</strong></a>
 </p>
 
 ## 1. Project Overview
@@ -229,5 +229,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 <p align="center">
-  Built with ❤️ by the Prescripto Team
+  Built with ❤️ by Anuj
 </p>
