@@ -1,6 +1,6 @@
 # Prescripto - Healthcare Appointment Management System
 
-![Prescripto Banner](https://via.placeholder.com/1200x400?text=Prescripto+Healthcare+System)
+![Prescripto Banner](frontend/public/prescripto-banner.png)
 
 ## 1. Project Overview
 
