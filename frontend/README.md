@@ -1,5 +1,11 @@
 # Prescripto - Patient Portal (Frontend)
 
+![Prescripto Banner](public/prescripto-banner.png)
+
+<p align="center">
+  <a href="https://prescripto-dev.netlify.app" target="_blank" rel="noopener noreferrer"><strong>Live Patient App</strong></a>
+</p>
+
 The **Prescripto Patient Portal** is a high-performance React application designed to provide patients with a seamless experience for discovering doctors, booking appointments, and managing their personal health profiles. Built with **Vite** for rapid development and **Tailwind CSS** for a modern, responsive UI, it serves as the primary client-facing interface of the ecosystem.
 
 ## 🛠️ Tech Stack

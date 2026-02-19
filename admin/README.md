@@ -1,5 +1,11 @@
 # Prescripto - Admin Dashboard (React)
 
+![Prescripto Banner](../frontend/public/prescripto-adminBanner.png)
+
+<p align="center">
+  <a href="https://prescripto-adminpanel.netlify.app" target="_blank" rel="noopener noreferrer"><strong>Live Admin Panel</strong></a>
+</p>
+
 The **Prescripto Admin Dashboard** is a comprehensive management interface for administrators and doctors. Built with **React** and styled with **Tailwind CSS**, it empowers authorized personnel to manage the entire platform, from doctor onboarding to daily appointment scheduling.
 
 ## 🛠️ Tech Stack
