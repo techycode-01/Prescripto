@@ -1,4 +1,4 @@
-import { useState, createContext } from "react";
+import { useState, createContext, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 
@@ -103,6 +103,42 @@ const DoctorContextProvider = (props) => {
       toast.error(error.message);
     }
   };
+  useEffect(() => {
+    axios.defaults.withCredentials = true;
+
+    const interceptor = axios.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        const originalRequest = error.config;
+        
+        if (error.response && error.response.status === 401 && !originalRequest._retry) {
+          originalRequest._retry = true;
+          try {
+            const { data } = await axios.get(backendUrl + "/api/doctor/refresh", {
+              withCredentials: true,
+            });
+            
+            if (data.success) {
+              setDToken(data.token);
+              localStorage.setItem("dToken", data.token);
+              originalRequest.headers.dToken = data.token;
+              return axios(originalRequest);
+            }
+          } catch (refreshError) {
+            setDToken("");
+            localStorage.removeItem("dToken");
+            return Promise.reject(refreshError);
+          }
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    return () => {
+      axios.interceptors.response.eject(interceptor);
+    };
+  }, []);
+
   const value = {
     dToken,
     setDToken,

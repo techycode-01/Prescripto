@@ -41,6 +41,12 @@ const addDoctor = async (req, res) => {
       return res.json({ success: false, message: "Please enter a strong password" })
     }
 
+    //checking for duplicate email
+    const exists = await doctorModel.findOne({ email: String(email) })
+    if (exists) {
+      return res.json({ success: false, message: "Doctor already exists with this email" })
+    }
+
     //hashing doctor password
     const salt = await bcrypt.genSalt(10)
     const hashedPassword = await bcrypt.hash(password, salt)
@@ -77,8 +83,16 @@ const loginAdmin = async (req, res) => {
   try {
     const { email, password } = req.body
     if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
-      const token = jwt.sign(email + password, process.env.JWT_SECRET)
-      res.json({ success: true, token })
+      const accessToken = jwt.sign({ email, role: "admin" }, process.env.JWT_SECRET, { expiresIn: '15m' })
+      const refreshToken = jwt.sign({ email, role: "admin" }, process.env.JWT_SECRET, { expiresIn: '7d' })
+
+      res.cookie('adminRefreshToken', refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000
+      })
+      res.json({ success: true, token: accessToken })
     } else {
       return res.json({ success: false, message: "Invalid Credentials" })
     }
@@ -161,4 +175,41 @@ const adminDashboard = async (req, res) => {
   }
 }
 
-export { addDoctor, loginAdmin, allDoctors, appointmentsAdmin, appointmentCancel, adminDashboard }
+// API for admin refresh token
+const adminRefreshToken = async (req, res) => {
+  try {
+    const refreshToken = req.cookies.adminRefreshToken;
+    if (!refreshToken) {
+      return res.status(401).json({ success: false, message: "No refresh token provided" });
+    }
+
+    const token_decode = jwt.verify(refreshToken, process.env.JWT_SECRET);
+    if (token_decode.role !== "admin" || token_decode.email !== process.env.ADMIN_EMAIL) {
+      return res.status(401).json({ success: false, message: "Invalid token role" });
+    }
+
+    const accessToken = jwt.sign({ email: token_decode.email, role: "admin" }, process.env.JWT_SECRET, { expiresIn: '15m' });
+    res.json({ success: true, token: accessToken });
+
+  } catch (error) {
+    console.log(error);
+    res.status(403).json({ success: false, message: "Invalid refresh token" });
+  }
+}
+
+// API for admin logout
+const adminLogout = async (req, res) => {
+  try {
+    res.clearCookie('adminRefreshToken', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict'
+    });
+    res.json({ success: true, message: "Logged out successfully" });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+}
+
+export { addDoctor, loginAdmin, allDoctors, appointmentsAdmin, appointmentCancel, adminDashboard, adminRefreshToken, adminLogout }

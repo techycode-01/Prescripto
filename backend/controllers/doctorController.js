@@ -7,7 +7,7 @@ import appointmentModel from "../models/appointmentModel.js"
 const changeAvailability = async (req, res) => {
     try {
 
-        const { docId } = req.body
+        const docId = req.docId
 
         const docData = await doctorModel.findById(docId)
         await doctorModel.findByIdAndUpdate(docId, { available: !docData.available })
@@ -33,7 +33,8 @@ const doctorList = async (req, res) => {
 const loginDoctor = async (req, res) => {
     try {
         const { email, password } = req.body
-        const doctor = await doctorModel.findOne({ email })
+        // Cast to string to prevent NoSQL Injection
+        const doctor = await doctorModel.findOne({ email: String(email) })
 
         if (!doctor) {
             return res.json({ success: false, message: "Invalid credentials" })
@@ -41,8 +42,16 @@ const loginDoctor = async (req, res) => {
 
         const isMatch = await bcrypt.compare(password, doctor.password)
         if (isMatch) {
-            const token = jwt.sign({ id: doctor._id }, process.env.JWT_SECRET)
-            res.json({ success: true, token })
+            const accessToken = jwt.sign({ id: doctor._id, role: "doctor" }, process.env.JWT_SECRET, { expiresIn: '15m' })
+            const refreshToken = jwt.sign({ id: doctor._id, role: "doctor" }, process.env.JWT_SECRET, { expiresIn: '7d' })
+
+            res.cookie('doctorRefreshToken', refreshToken, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'strict',
+                maxAge: 7 * 24 * 60 * 60 * 1000
+            })
+            res.json({ success: true, token: accessToken })
         } else {
             return res.json({ success: false, message: "Invalid credentials" })
         }
@@ -56,7 +65,7 @@ const loginDoctor = async (req, res) => {
 // API to get doctor appointments for doctor panel
 const appointmentsDoctor = async (req, res) => {
     try {
-        const { docId } = req.body
+        const docId = req.docId
         const appointments = await appointmentModel.find({ docId })
         res.json({ success: true, appointments })
     } catch (error) {
@@ -70,7 +79,8 @@ const appointmentsDoctor = async (req, res) => {
 //API to mark appointment completed for doctor panel
 const appointmentComplete = async (req, res) => {
     try {
-        const { docId, appointmentId } = req.body
+        const docId = req.docId
+        const { appointmentId } = req.body
         const appointmentData = await appointmentModel.findById(appointmentId)
 
         if (appointmentData && appointmentData.docId === docId) {
@@ -90,11 +100,22 @@ const appointmentComplete = async (req, res) => {
 //API to cancel appointment completed for doctor panel
 const appointmentCancel = async (req, res) => {
     try {
-        const { docId, appointmentId } = req.body
+        const docId = req.docId
+        const { appointmentId } = req.body
         const appointmentData = await appointmentModel.findById(appointmentId)
 
         if (appointmentData && appointmentData.docId === docId) {
             await appointmentModel.findByIdAndUpdate(appointmentId, { cancelled: true })
+
+            //releasing doctor slot
+            const { slotDate, slotTime } = appointmentData
+            const doctorData = await doctorModel.findById(docId)
+            let slots_booked = doctorData.slots_booked
+            if (slots_booked[slotDate]) {
+                slots_booked[slotDate] = slots_booked[slotDate].filter((e) => e !== slotTime)
+                await doctorModel.findByIdAndUpdate(docId, { slots_booked })
+            }
+
             res.json({ success: true, message: "Appointment cancelled" })
         }
         else {
@@ -110,7 +131,7 @@ const appointmentCancel = async (req, res) => {
 // API to get dashboard data for doctor panel
 const doctorDashboard = async (req, res) => {
     try {
-        const { docId } = req.body
+        const docId = req.docId
         const appointments = await appointmentModel.find({ docId })
 
         let earnings = 0
@@ -145,7 +166,7 @@ const doctorDashboard = async (req, res) => {
 //API to get doctor profile for Doctor Panel
 const doctorProfile = async (req, res) => {
     try {
-        const { docId } = req.body
+        const docId = req.docId
         const profileData = await doctorModel.findById(docId).select("-password")
 
         res.json({ success: true, profileData })
@@ -159,7 +180,8 @@ const doctorProfile = async (req, res) => {
 //API to update doctor profile data for Doctor Panel
 const updateDoctorProfile = async (req, res) => {
     try {
-        const { docId, fees, address, available } = req.body
+        const docId = req.docId
+        const { fees, address, available } = req.body
         await doctorModel.findByIdAndUpdate(docId, { fees, address, available })
 
         res.json({ success: true, message: "Profile Updated" })
@@ -169,6 +191,43 @@ const updateDoctorProfile = async (req, res) => {
 
     }
 }
+// API for doctor refresh token
+const doctorRefreshToken = async (req, res) => {
+    try {
+        const refreshToken = req.cookies.doctorRefreshToken;
+        if (!refreshToken) {
+            return res.status(401).json({ success: false, message: "No refresh token provided" });
+        }
+
+        const token_decode = jwt.verify(refreshToken, process.env.JWT_SECRET);
+        if (token_decode.role !== "doctor") {
+            return res.status(401).json({ success: false, message: "Invalid token role" });
+        }
+
+        const accessToken = jwt.sign({ id: token_decode.id, role: "doctor" }, process.env.JWT_SECRET, { expiresIn: '15m' });
+        res.json({ success: true, token: accessToken });
+
+    } catch (error) {
+        console.log(error);
+        res.status(403).json({ success: false, message: "Invalid refresh token" });
+    }
+}
+
+// API for doctor logout
+const doctorLogout = async (req, res) => {
+    try {
+        res.clearCookie('doctorRefreshToken', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict'
+        });
+        res.json({ success: true, message: "Logged out successfully" });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+}
+
 export {
     changeAvailability,
     doctorList,
@@ -178,5 +237,7 @@ export {
     appointmentCancel,
     doctorDashboard,
     doctorProfile,
-    updateDoctorProfile
+    updateDoctorProfile,
+    doctorRefreshToken,
+    doctorLogout
 }

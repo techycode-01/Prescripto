@@ -25,6 +25,12 @@ const registerUser = async (req, res) => {
             return res.json({ success: false, message: "Enter a strong password" })
         }
 
+        //checking for duplicate email
+        const exists = await userModel.findOne({ email: String(email) })
+        if (exists) {
+            return res.json({ success: false, message: "User already exists with this email" })
+        }
+
         //hashing user password
         const salt = await bcrypt.genSalt(10)
         const hashedPassword = await bcrypt.hash(password, salt)
@@ -36,8 +42,16 @@ const registerUser = async (req, res) => {
         const newUser = new userModel(userData)
         const user = await newUser.save()
 
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET)
-        res.json({ success: true, token })
+        const accessToken = jwt.sign({ id: user._id, role: "user" }, process.env.JWT_SECRET, { expiresIn: '15m' })
+        const refreshToken = jwt.sign({ id: user._id, role: "user" }, process.env.JWT_SECRET, { expiresIn: '7d' })
+
+        res.cookie('userRefreshToken', refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        })
+        res.json({ success: true, token: accessToken })
 
 
     } catch (error) {
@@ -50,7 +64,8 @@ const registerUser = async (req, res) => {
 const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body
-        const user = await userModel.findOne({ email })
+        // Cast to string to prevent NoSQL Injection
+        const user = await userModel.findOne({ email: String(email) })
 
         if (!user) {
             return res.json({ success: false, message: "User does not exist" })
@@ -58,8 +73,16 @@ const loginUser = async (req, res) => {
         const isMatch = await bcrypt.compare(password, user.password)
 
         if (isMatch) {
-            const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET)
-            return res.json({ success: true, token })
+            const accessToken = jwt.sign({ id: user._id, role: "user" }, process.env.JWT_SECRET, { expiresIn: '15m' })
+            const refreshToken = jwt.sign({ id: user._id, role: "user" }, process.env.JWT_SECRET, { expiresIn: '7d' })
+
+            res.cookie('userRefreshToken', refreshToken, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'strict',
+                maxAge: 7 * 24 * 60 * 60 * 1000
+            })
+            return res.json({ success: true, token: accessToken })
         } else {
             return res.json({ success: false, message: "Invalid Credentials" })
         }
@@ -74,7 +97,7 @@ const loginUser = async (req, res) => {
 const getProfile = async (req, res) => {
     try {
 
-        const { userId } = req.body
+        const userId = req.userId
         const userData = await userModel.findById(userId).select("-password")
 
         res.json({ success: true, userData })
@@ -89,7 +112,8 @@ const getProfile = async (req, res) => {
 // API to update user profile
 const updateProfile = async (req, res) => {
     try {
-        const { userId, name, phone, address, dob, gender } = req.body
+        const userId = req.userId
+        const { name, phone, address, dob, gender } = req.body
         const imageFile = req.file
 
         if (!name || !phone || !address || !dob || !gender) {
@@ -115,12 +139,20 @@ const updateProfile = async (req, res) => {
 
 }
 
+import mongoose from "mongoose";
+
 //API to book appointment
 const bookAppointment = async (req, res) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
     try {
-        const { userId, docId, slotDate, slotTime } = req.body
-        const docData = await doctorModel.findById(docId).select("-password")
+        const userId = req.userId
+        const { docId, slotDate, slotTime } = req.body
+        const docData = await doctorModel.findById(docId).session(session).select("-password")
         if (!docData.available) {
+            await session.abortTransaction();
+            session.endSession();
             return res.json({ success: false, message: 'Doctor not available' })
         }
         let slots_booked = docData.slots_booked
@@ -129,6 +161,8 @@ const bookAppointment = async (req, res) => {
         //checking for slot availablity
         if (slots_booked[slotDate]) {
             if (slots_booked[slotDate].includes(slotTime)) {
+                await session.abortTransaction();
+                session.endSession();
                 return res.json({ success: false, message: 'Slot not available' })
             } else {
                 slots_booked[slotDate].push(slotTime)
@@ -140,7 +174,7 @@ const bookAppointment = async (req, res) => {
             slots_booked[slotDate].push(slotTime)
         }
 
-        const userData = await userModel.findById(userId).select("-password")
+        const userData = await userModel.findById(userId).session(session).select("-password")
 
         delete docData.slots_booked
 
@@ -155,15 +189,20 @@ const bookAppointment = async (req, res) => {
             date: Date.now()
         }
         const newAppointment = await appointmentModel(appointmentData)
-        await newAppointment.save()
+        await newAppointment.save({ session })
 
         //save new slots data in docData
-        await doctorModel.findByIdAndUpdate(docId, { slots_booked })
+        await doctorModel.findByIdAndUpdate(docId, { slots_booked }, { session })
+
+        await session.commitTransaction();
+        session.endSession();
 
         res.json({ success: true, message: 'Appointment booked' })
 
 
     } catch (error) {
+        await session.abortTransaction();
+        session.endSession();
         console.log(error)
         res.json({ success: false, message: error.message })
     }
@@ -173,7 +212,7 @@ const bookAppointment = async (req, res) => {
 
 const listAppointment = async (req, res) => {
     try {
-        const { userId } = req.body
+        const userId = req.userId
         const appointments = await appointmentModel.find({ userId })
 
         res.json({ success: true, appointments })
@@ -188,9 +227,15 @@ const cancelAppointment = async (req, res) => {
 
     try {
 
-        const { userId, appointmentId } = req.body
+        const userId = req.userId
+        const { appointmentId } = req.body
 
         const appointmentData = await appointmentModel.findById(appointmentId)
+
+        if (appointmentData.cancelled) {
+            return res.json({ success: false, message: 'Appointment already cancelled' })
+        }
+
         //verify appointment user
         if (appointmentData.userId !== userId) {
             return res.json({ success: false, message: 'Unauthorized action' })
@@ -227,12 +272,18 @@ const razorpayInstance = new razorpay({
 // API to make payment of appointmnet using razorpay
 const paymentRazorpay = async (req, res) => {
     try {
+        const userId = req.userId
         const { appointmentId } = req.body
         const appointmentData = await appointmentModel.findById(appointmentId)
 
         if (!appointmentData || appointmentData.cancelled) {
             return res.json({ success: false, message: 'Appointment Cancelled or not found' })
 
+        }
+
+        // Verify appointment ownership
+        if (appointmentData.userId !== userId) {
+            return res.json({ success: false, message: 'Unauthorized action' })
         }
 
         //creating options for razorpay payment
@@ -256,11 +307,31 @@ const paymentRazorpay = async (req, res) => {
 
 }
 
+import crypto from "crypto";
+
 // API to verify payment of razorpay
 const verifyPayment = async (req, res) => {
     try {
-        const { razorpay_order_id } = req.body
+        const userId = req.userId
+        const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body
+
+        // Verify the Razorpay signature to prevent tampering
+        const expectedSignature = crypto
+            .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+            .update(razorpay_order_id + "|" + razorpay_payment_id)
+            .digest("hex");
+
+        if (expectedSignature !== razorpay_signature) {
+            return res.json({ success: false, message: 'Payment Verification Failed' })
+        }
+
         const orderInfo = await razorpayInstance.orders.fetch(razorpay_order_id)
+
+        // Verify appointment ownership
+        const appointmentData = await appointmentModel.findById(orderInfo.receipt)
+        if (appointmentData.userId !== userId) {
+            return res.json({ success: false, message: 'Unauthorized action' })
+        }
 
         if (orderInfo.status === "paid") {
             await appointmentModel.findByIdAndUpdate(orderInfo.receipt, { payment: true })
@@ -275,4 +346,41 @@ const verifyPayment = async (req, res) => {
     }
 }
 
-export { registerUser, loginUser, getProfile, updateProfile, bookAppointment, listAppointment, cancelAppointment, paymentRazorpay, verifyPayment }
+// API for user refresh token
+const userRefreshToken = async (req, res) => {
+    try {
+        const refreshToken = req.cookies.userRefreshToken;
+        if (!refreshToken) {
+            return res.status(401).json({ success: false, message: "No refresh token provided" });
+        }
+
+        const token_decode = jwt.verify(refreshToken, process.env.JWT_SECRET);
+        if (token_decode.role !== "user") {
+            return res.status(401).json({ success: false, message: "Invalid token role" });
+        }
+
+        const accessToken = jwt.sign({ id: token_decode.id, role: "user" }, process.env.JWT_SECRET, { expiresIn: '15m' });
+        res.json({ success: true, token: accessToken });
+
+    } catch (error) {
+        console.log(error);
+        res.status(403).json({ success: false, message: "Invalid refresh token" });
+    }
+}
+
+// API for user logout
+const userLogout = async (req, res) => {
+    try {
+        res.clearCookie('userRefreshToken', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict'
+        });
+        res.json({ success: true, message: "Logged out successfully" });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+}
+
+export { registerUser, loginUser, getProfile, updateProfile, bookAppointment, listAppointment, cancelAppointment, paymentRazorpay, verifyPayment, userRefreshToken, userLogout }

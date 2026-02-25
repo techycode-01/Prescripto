@@ -57,6 +57,50 @@ const AppContextProvider = (props) => {
 
   useEffect(() => {
     getDoctorsData();
+
+    // Enable sending cookies with requests globally
+    axios.defaults.withCredentials = true;
+
+    // Axios Interceptor for Silent Token Refresh
+    const interceptor = axios.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        const originalRequest = error.config;
+        
+        // If 401 Unauthorized and we haven't already retried
+        if (error.response && error.response.status === 401 && !originalRequest._retry) {
+          originalRequest._retry = true;
+          
+          try {
+            // Attempt to get a new access token using the HttpOnly Refresh Cookie
+            const { data } = await axios.get(backendUrl + "/api/user/refresh", {
+              withCredentials: true, 
+            });
+            
+            if (data.success) {
+              setToken(data.token);
+              localStorage.setItem("token", data.token);
+              
+              // Update the failed request with the new token and retry it
+              originalRequest.headers.token = data.token;
+              return axios(originalRequest);
+            }
+          } catch (refreshError) {
+            // Refresh token expired or invalid, force logout
+            console.log("Session expired. Please log in again.");
+            setToken(false);
+            localStorage.removeItem("token");
+            return Promise.reject(refreshError);
+          }
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    // Cleanup interceptor on unmount
+    return () => {
+      axios.interceptors.response.eject(interceptor);
+    };
   }, []);
 
   useEffect(() => {
