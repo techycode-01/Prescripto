@@ -67,8 +67,8 @@ const AppContextProvider = (props) => {
       async (error) => {
         const originalRequest = error.config;
         
-        // If 401 Unauthorized and we haven't already retried
-        if (error.response && error.response.status === 401 && !originalRequest._retry) {
+        // If 401 Unauthorized, we haven't already retried, and it's NOT the refresh endpoint itself
+        if (error.response && error.response.status === 401 && !originalRequest._retry && !originalRequest.url.includes('/refresh')) {
           originalRequest._retry = true;
           
           try {

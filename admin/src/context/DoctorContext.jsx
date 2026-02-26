@@ -111,7 +111,7 @@ const DoctorContextProvider = (props) => {
       async (error) => {
         const originalRequest = error.config;
         
-        if (error.response && error.response.status === 401 && !originalRequest._retry) {
+        if (error.response && error.response.status === 401 && !originalRequest._retry && !originalRequest.url.includes('/refresh')) {
           originalRequest._retry = true;
           try {
             const { data } = await axios.get(backendUrl + "/api/doctor/refresh", {
