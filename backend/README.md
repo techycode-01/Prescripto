@@ -11,7 +11,7 @@ The **Prescripto Backend API** is the core business logic layer of the applicati
 *   **File Storage**: Cloudinary (Image Uploads via Multer)
 *   **Payment Gateway**: Razorpay Integration
 *   **Validation**: Validator.js
-*   **Security**: CORS, Dotenv
+*   **Security & Hardening**: Helmet, Express Rate Limit, CORS, Cookie Parser
 
 ## 📂 Project Structure
 
@@ -33,7 +33,20 @@ The system implements Role-Based Access Control (RBAC) with three distinct roles
 2.  **Doctor (`authDoctor`)**: Can manage availability and view assigned appointments.
 3.  **Admin (`authAdmin`)**: Has full system control, doctor onboarding, and analytics access.
 
-Each request to a protected route must include a valid JWT in the `token` header.
+Each request to a protected route must include a valid, short-lived `AccessToken` in the headers.
+
+### Dual-Token Architecture
+The backend implements a highly secure authentication flow:
+1. **Access Token**: Short lifespan (15 minutes). Sent in the standard JSON response to authorize API access.
+2. **Refresh Token**: Long lifespan (7 days). Securely attached to the client via an **`HttpOnly` Cookie**, completely protecting it against XSS attacks. 
+3. **Rotation Endpoints**: `/api/user/refresh` (and admin/doctor equivalents) silently validate the secure cookie and issue fresh Access Tokens on the fly.
+
+## 🛡️ Advanced Security Features
+
+*   **Global Hardening**: `helmet` is configured to set tight HTTP headers, and `express-rate-limit` prevents brute-force logins and basic DDoS attempts.
+*   **Strict CORS Policy**: Discards wildcard origins in favor of explicit client arrays.
+*   **Mongoose Transactions**: `bookAppointment` flows use MongoDB session transactions to ensure atomic locking and eliminate double-booking race conditions.
+*   **Injection & Traversal Protection**: Explicit parameter casting blocks NoSQL injections, and Multer regex sanitization prevents Arbitrary File Writes on image uploads.
 
 ## 🚀 Installation & Setup
 

@@ -44,6 +44,12 @@ This dashboard supports two distinct user roles, managed via separate contexts:
     *   **Capabilities**: View assigned appointments, complete appointments, update profile details, manage availability.
     *   **Login**: Uses email and password credentials created by the Admin.
 
+### 🛡️ Dual-Token Architecture & Silent Rotation
+To protect the high-privilege dashboard environments against Cross-Site Scripting (XSS), the application employs a highly secure token flow:
+*   **Access Tokens**: Short-lived (15 mins) identifiers (`aToken`) stored in state for immediate API access.
+*   **Refresh Tokens**: Long-lived (7 days) authentication tokens securely attached by the backend as **`HttpOnly` cookies**.
+*   **Axios Interceptors**: The context providers feature global HTTP interceptors. When an Access Token naturally expires (`401 Unauthorized`), the interceptor automatically pauses the request, calls the respective `/refresh` endpoint using the secure cookie to mint a fresh Access Token, and seamlessly retries the failed request. This guarantees dashboard security without interrupting the admin/doctor workflows.
+
 ## 🚀 Installation & Setup
 
 ### Prerequisites

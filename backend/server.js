@@ -36,8 +36,8 @@ app.use("/api/", apiLimiter);
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",
-  process.env.FRONTEND_URL,
-  process.env.ADMIN_URL
+  process.env.VITE_FRONTEND_URL,
+  process.env.VITE_ADMIN_URL
 ].filter(Boolean);
 
 app.use(cors({

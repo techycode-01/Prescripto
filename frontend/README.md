@@ -33,13 +33,13 @@ frontend/
 └── ...
 ```
 
-## 🔐 Authentication & Flow
+## 🔐 Authentication & Advanced Flow
 
-The application uses **JWT (JSON Web Tokens)** for secure authentication.
+The application uses a **Dual-Token Architecture** for heavily hardened security against XSS.
 1.  **Registration/Login**: Users authenticate via the `/api/user/login` or `/api/user/register` endpoints.
-2.  **Token Storage**: Upon success, a `token` is stored in the browser's `localStorage`.
-3.  **Protected Routes**: Components like `MyAppointments` and `MyProfile` check for the existence of this token before rendering.
-4.  **Session Persistence**: The `AppContext` initializes the user session by validating the stored token against the backend.
+2.  **Token Issuance**: The backend responds with a short-lived JSON **Access Token** (15m) and securely attaches a long-lived **Refresh Token** (7d) as an `HttpOnly` secure cookie.
+3.  **Protected Routes**: Components check for the existence of the Access Token in state/local storage before rendering.
+4.  **Invisible Token Rotation (Axios Interceptors)**: The `AppContext` configures global Axios response interceptors. If the 15m Access Token expires, the backend throws a `401 Unauthorized` error. The interceptor catches this, pauses the request, silently queries `/api/user/refresh` (passing the HttpOnly cookie), grabs a new Access Token, and seamlessly retries the original request without disrupting the user experience.
 
 ## 🚀 Installation & Setup
 

@@ -197,15 +197,23 @@ The frontend communicates with the backend via **Axios**.
 *   **Interceptors**: Tokens are passed in headers (e.g., `token: <jwt_string>`) for protected routes.
 *   **Error Handling**: Centralized error management using React Toastify for user feedback.
 
-## 11. Authentication & Security
+## 11. Authentication & Advanced Security
 
-*   **JWT Implementation**: 
-    *   `token` (User)
-    *   `aToken` (Admin)
-    *   `dToken` (Doctor)
-    *   These tokens are stored in `localStorage` for session persistence.
-*   **Password Security**: All user and doctor passwords are hashed using `bcrypt` before storage.
-*   **Middleware**: Custom Express middleware (`authAdmin.js`, `authUser.js`) verifies the JWT signature before granting access to protected endpoints.
+Prescripto employs a highly secure, enterprise-grade security architecture:
+
+*   **Dual-Token Architecture**: 
+    *   **Access Tokens**: Short-lived (15 mins), sent via JSON, and explicitly tied to user roles (`user`, `doctor`, `admin`) to prevent structural token interchangeability.
+    *   **Refresh Tokens**: Long-lived (7 days), securely stored in **`HttpOnly` cookies**, making them 100% immune to frontend Cross-Site Scripting (XSS) extraction attacks.
+*   **Invisible Token Rotation**: The Frontend and Admin SPAs utilize **Axios Response Interceptors**. If an Access Token naturally expires (`401 Unauthorized`), the interceptor pauses the request, silently queries the backend's `/refresh` endpoint using the secure HttpOnly cookie, mints a new Access Token, and retries the original request entirely invisibly to the user.
+*   **Global Backend Hardening**:
+    *   **Helmet**: Automatically sets robust HTTP security headers against clickjacking and XSS.
+    *   **Express Rate Limiter**: Caps requests to 100 per 15 minutes per IP to aggressively throttle credential stuffing and DDoS attempts.
+    *   **Strict CORS Policy**: Whitelists specific origins and strictly enforces `credentials: true` for secure cross-origin cookie transmission.
+*   **Database & Logic Security**:
+    *   **Atomic Transactions**: Critical flows like appointment booking utilize MongoDB Sessions and Transactions to prevent race conditions.
+    *   **NoSQL Injection Prevention**: Key query parameters are explicitly cast to Strings to nullify malicious MongoDB operators.
+    *   **Path Traversal Prevention**: File uploads via Multer are sanitized and timestamped before saving.
+*   **Password & Payment Security**: User passwords are encrypted using `bcrypt` (cost factor 10). Payments are secured via Razorpay HMAC SHA256 Signature validations.
 
 ## 12. Build & Deployment
 
