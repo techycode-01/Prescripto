@@ -253,15 +253,16 @@ A `node-cron` scheduler runs **every day at 8:00 AM** server time. It scans the 
 *   **Docker Support**: Containerized environment for consistent deployment.
 
 ### 🛡️ Security & Scalability
-*   **Two-Factor Authentication (2FA)**: Added security layer for Doctors and Admins.
+*   **Two-Factor Authentication (2FA)**: Added security layer for Doctors and Admins(Password otp based signup and login).
 *   **Redis Caching**: Performance optimization for high-traffic endpoints.
 *   **Audit Logging**: Comprehensive admin activity tracking.
 
 ### 🧩 Feature Expansion
-*   **Telemedicine**: Integration of WebRTC for video consultations.
 *   **Prescriptions**: Digital prescription generation and PDF download.
 *   **Chat System**: Real-time chat between doctor and patient.
+*   **Telemedicine**: Integration of WebRTC for video consultations.
 *   **Multi-language Support**: i18n integration for global accessibility.
+*   **Membership Plans**: Tiered access for patients (Premium support) and doctors (Featured listings).
 
 ### 🤖 AI & Machine Learning
 *   **AI Symptom Checker**: Preliminary diagnosis tool suggesting specialities based on patient symptoms.
