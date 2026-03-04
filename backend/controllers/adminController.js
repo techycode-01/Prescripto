@@ -5,6 +5,8 @@ import doctorModel from "../models/doctorModel.js"
 import appointmentModel from "../models/appointmentModel.js"
 import userModel from "../models/userModel.js"
 import jwt from "jsonwebtoken"
+import sendEmail from "../utils/SendEmail.js"
+import slotDateFormat from "../utils/slotDateFormat.js"
 
 
 
@@ -139,7 +141,7 @@ const appointmentCancel = async (req, res) => {
 
     //releasing doctor slot
 
-    const { docId, slotDate, slotTime } = appointmentData
+    const { docId, slotDate, slotTime, userData, docData } = appointmentData
 
     const doctorData = await doctorModel.findById(docId)
     let slots_booked = doctorData.slots_booked
@@ -147,6 +149,31 @@ const appointmentCancel = async (req, res) => {
     slots_booked[slotDate] = slots_booked[slotDate].filter((e) => e !== slotTime)
 
     await doctorModel.findByIdAndUpdate(docId, { slots_booked })
+
+    // Send Email Notifications
+    try {
+      const dateStr = slotDateFormat(slotDate) + " at " + slotTime;
+      const emailPromises = [
+        sendEmail({
+          to: userData.email,
+          subject: "Appointment Cancelled by Administration - Prescripto",
+          text: `Dear ${userData.name},\n\nWe apologize, but your appointment with ${docData.name} on ${dateStr} has been cancelled by the clinic administration.\n\nPlease contact us for further assistance or book a new slot.`
+        }),
+        sendEmail({
+          to: docData.email,
+          subject: "Appointment Cancelled by Administration - Prescripto",
+          text: `Dear ${docData.name},\n\nYour appointment with ${userData.name} scheduled for ${dateStr} has been cancelled by the administration.\n\nThe slot has been reopened.`
+        }),
+        sendEmail({
+          to: process.env.ADMIN_EMAIL,
+          subject: "System Alert: Appointment Cancelled by Admin - Prescripto",
+          text: `An appointment has been cancelled by an administrator.\n\nDoctor: ${docData.name}\nPatient: ${userData.name}\nDate: ${dateStr}`
+        })
+      ];
+      await Promise.all(emailPromises);
+    } catch (emailError) {
+      console.error("Error sending cancellation emails:", emailError);
+    }
 
     res.json({ success: true, message: 'Appointment cancelled' })
 

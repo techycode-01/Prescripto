@@ -2,7 +2,8 @@ import doctorModel from "../models/doctorModel.js"
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
 import appointmentModel from "../models/appointmentModel.js"
-
+import sendEmail from "../utils/SendEmail.js"
+import slotDateFormat from "../utils/slotDateFormat.js"
 
 const changeAvailability = async (req, res) => {
     try {
@@ -85,6 +86,33 @@ const appointmentComplete = async (req, res) => {
 
         if (appointmentData && appointmentData.docId === docId) {
             await appointmentModel.findByIdAndUpdate(appointmentId, { isCompleted: true })
+
+            // Send Completion Email Notifications
+            try {
+                const { userData, docData, slotDate, slotTime } = appointmentData;
+                const dateStr = slotDateFormat(slotDate) + " at " + slotTime;
+                const emailPromises = [
+                    sendEmail({
+                        to: userData.email,
+                        subject: "Appointment Completed - Prescripto",
+                        text: `Dear ${userData.name},\n\nYour appointment with ${docData.name} on ${dateStr} has been marked as completed.\n\nWe hope you had a great experience. Thank you for choosing Prescripto!`
+                    }),
+                    sendEmail({
+                        to: docData.email,
+                        subject: "Appointment Marked Completed - Prescripto",
+                        text: `Dear ${docData.name},\n\nYou have successfully marked your appointment with ${userData.name} on ${dateStr} as completed.`
+                    }),
+                    sendEmail({
+                        to: process.env.ADMIN_EMAIL,
+                        subject: "System Alert: Appointment Completed - Prescripto",
+                        text: `An appointment has been marked as completed.\n\nDoctor: ${docData.name}\nPatient: ${userData.name}\nDate: ${dateStr}`
+                    })
+                ];
+                await Promise.all(emailPromises);
+            } catch (emailError) {
+                console.error("Error sending completion emails:", emailError);
+            }
+
             res.json({ success: true, message: "Appointment completed" })
         }
         else {
@@ -108,12 +136,37 @@ const appointmentCancel = async (req, res) => {
             await appointmentModel.findByIdAndUpdate(appointmentId, { cancelled: true })
 
             //releasing doctor slot
-            const { slotDate, slotTime } = appointmentData
+            const { slotDate, slotTime, userData, docData } = appointmentData
             const doctorData = await doctorModel.findById(docId)
             let slots_booked = doctorData.slots_booked
             if (slots_booked[slotDate]) {
                 slots_booked[slotDate] = slots_booked[slotDate].filter((e) => e !== slotTime)
                 await doctorModel.findByIdAndUpdate(docId, { slots_booked })
+            }
+
+            // Send Email Notifications
+            try {
+                const dateStr = slotDateFormat(slotDate) + " at " + slotTime;
+                const emailPromises = [
+                    sendEmail({
+                        to: userData.email,
+                        subject: "Appointment Cancelled by Doctor - Prescripto",
+                        text: `Dear ${userData.name},\n\nWe apologize, but your appointment with ${docData.name} on ${dateStr} has been cancelled by the doctor.\n\nPlease book a new slot or choose a different doctor.`
+                    }),
+                    sendEmail({
+                        to: docData.email,
+                        subject: "Appointment Cancelled - Prescripto",
+                        text: `Dear ${docData.name},\n\nYou have successfully cancelled the appointment with ${userData.name} scheduled for ${dateStr}.`
+                    }),
+                    sendEmail({
+                        to: process.env.ADMIN_EMAIL,
+                        subject: "System Alert: Appointment Cancelled by Doctor - Prescripto",
+                        text: `An appointment has been cancelled by a doctor.\n\nDoctor: ${docData.name}\nPatient: ${userData.name}\nDate: ${dateStr}`
+                    })
+                ];
+                await Promise.all(emailPromises);
+            } catch (emailError) {
+                console.error("Error sending cancellation emails:", emailError);
             }
 
             res.json({ success: true, message: "Appointment cancelled" })

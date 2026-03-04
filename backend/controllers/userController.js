@@ -6,7 +6,8 @@ import { v2 as cloudinary } from "cloudinary"
 import doctorModel from "../models/doctorModel.js";
 import appointmentModel from "../models/appointmentModel.js";
 import razorpay from "razorpay"
-
+import sendEmail from "../utils/SendEmail.js"
+import slotDateFormat from "../utils/slotDateFormat.js"
 
 //API to register user
 const registerUser = async (req, res) => {
@@ -197,6 +198,31 @@ const bookAppointment = async (req, res) => {
         await session.commitTransaction();
         session.endSession();
 
+        // Send Email Notifications
+        try {
+            const dateStr = slotDateFormat(slotDate) + " at " + slotTime;
+            const emailPromises = [
+                sendEmail({
+                    to: userData.email,
+                    subject: "Appointment Confirmed - Prescripto",
+                    text: `Dear ${userData.name},\n\nYour appointment with ${docData.name} has been successfully booked for ${dateStr}.\n\nThank you for choosing Prescripto!`
+                }),
+                sendEmail({
+                    to: docData.email,
+                    subject: "New Appointment Booked - Prescripto",
+                    text: `Dear ${docData.name},\n\nYou have a new appointment booked by ${userData.name} for ${dateStr}.\n\nPlease check your dashboard for more details.`
+                }),
+                sendEmail({
+                    to: process.env.ADMIN_EMAIL,
+                    subject: "System Alert: New Appointment - Prescripto",
+                    text: `A new appointment has been booked.\n\nDoctor: ${docData.name}\nPatient: ${userData.name}\nDate: ${dateStr}`
+                })
+            ];
+            await Promise.all(emailPromises);
+        } catch (emailError) {
+            console.error("Error sending booking emails:", emailError);
+        }
+
         res.json({ success: true, message: 'Appointment booked' })
 
 
@@ -208,7 +234,7 @@ const bookAppointment = async (req, res) => {
     }
 }
 
-// API to get user appointments for fronetd my-appointments page
+// API to get user appointments for frontend my-appointments page
 
 const listAppointment = async (req, res) => {
     try {
@@ -246,7 +272,7 @@ const cancelAppointment = async (req, res) => {
 
         //releasing doctor slot
 
-        const { docId, slotDate, slotTime } = appointmentData
+        const { docId, slotDate, slotTime, userData, docData } = appointmentData
 
         const doctorData = await doctorModel.findById(docId)
         let slots_booked = doctorData.slots_booked
@@ -254,6 +280,31 @@ const cancelAppointment = async (req, res) => {
         slots_booked[slotDate] = slots_booked[slotDate].filter((e) => e !== slotTime)
 
         await doctorModel.findByIdAndUpdate(docId, { slots_booked })
+
+        // Send Email Notifications
+        try {
+            const dateStr = slotDateFormat(slotDate) + " at " + slotTime;
+            const emailPromises = [
+                sendEmail({
+                    to: userData.email,
+                    subject: "Appointment Cancelled - Prescripto",
+                    text: `Dear ${userData.name},\n\nYour appointment with ${docData.name} on ${dateStr} has been cancelled as requested.\n\nThank you for using Prescripto.`
+                }),
+                sendEmail({
+                    to: docData.email,
+                    subject: "Appointment Cancelled by Patient - Prescripto",
+                    text: `Dear ${docData.name},\n\nYour appointment with ${userData.name} scheduled for ${dateStr} has been cancelled by the patient.\n\nThe slot has been reopened.`
+                }),
+                sendEmail({
+                    to: process.env.ADMIN_EMAIL,
+                    subject: "System Alert: Appointment Cancelled by Patient - Prescripto",
+                    text: `An appointment has been cancelled by a patient.\n\nDoctor: ${docData.name}\nPatient: ${userData.name}\nDate: ${dateStr}`
+                })
+            ];
+            await Promise.all(emailPromises);
+        } catch (emailError) {
+            console.error("Error sending cancellation emails:", emailError);
+        }
 
         res.json({ success: true, message: 'Appointment cancelled' })
 
