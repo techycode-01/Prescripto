@@ -261,7 +261,6 @@ A `node-cron` scheduler runs **every day at 8:00 AM** server time. It scans the 
 *   **Telemedicine**: Integration of WebRTC for video consultations.
 *   **Prescriptions**: Digital prescription generation and PDF download.
 *   **Chat System**: Real-time chat between doctor and patient.
-*   **Notifications**: SMS/Email reminders for upcoming appointments via Twilio/SendGrid(maybe).
 *   **Multi-language Support**: i18n integration for global accessibility.
 
 ### 🤖 AI & Machine Learning
