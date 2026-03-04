@@ -12,6 +12,8 @@ The **Prescripto Backend API** is the core business logic layer of the applicati
 *   **Payment Gateway**: Razorpay Integration
 *   **Validation**: Validator.js
 *   **Security & Hardening**: Helmet, Express Rate Limit, CORS, Cookie Parser
+*   **Email Service**: Nodemailer (Gmail SMTP)
+*   **Task Scheduling**: Node-Cron (Appointment Reminders)
 
 ## 📂 Project Structure
 
@@ -19,9 +21,10 @@ The **Prescripto Backend API** is the core business logic layer of the applicati
 backend/
 ├── config/              # Configuration for DB & Cloudinary
 ├── controllers/         # Logic for API endpoints (User, Doctor, Admin)
-├── middlewares/         # Auth verification (authAdmin, authUser) & Multer
+├── middlewares/         # Auth verification (authAdmin, authUser, authDoctor) & Multer
 ├── models/              # Mongoose Schemas (User, Doctor, Appointment)
 ├── routes/              # API Route definitions
+├── utils/               # Shared utilities (SendEmail, slotDateFormat, reminderCron)
 └── server.js            # Application entry point
 ```
 
@@ -89,6 +92,10 @@ ADMIN_PASSWORD=secure_admin_password
 RAZORPAY_KEY_ID=your_razorpay_key_id
 RAZORPAY_KEY_SECRET=your_razorpay_key_secret
 CURRENCY=INR
+
+# Email (Gmail SMTP via Nodemailer)
+SMTP_USER=your_gmail_address@gmail.com
+SMTP_PASS=your_16_char_gmail_app_password
 ```
 
 ### 3. Start the Server
@@ -109,3 +116,17 @@ npm run server
 *   **Database Connection Error**: Verify your `MONGODB_URI` and ensure your IP is whitelisted in MongoDB Atlas.
 *   **Image Upload Failures**: Check your Cloudinary credentials in `.env`.
 *   **Authentication Issues**: Ensure the `JWT_SECRET` matches across environments if scaling horizontally.
+*   **Email Not Sending**: Ensure `SMTP_USER` and `SMTP_PASS` are set. `SMTP_PASS` must be a [Gmail App Password](https://myaccount.google.com/apppasswords) (not your regular Gmail password).
+
+## 📧 Email Notification System
+
+All transactional emails are dispatched by `utils/SendEmail.js` using **Nodemailer** and a Gmail SMTP transport.
+
+| Event | Patient | Doctor | Admin |
+|---|---|---|---|
+| Appointment Booked | ✅ | ✅ | ✅ |
+| Cancelled (by Patient/Doctor/Admin) | ✅ | ✅ | ✅ |
+| Completed by Doctor | ✅ | ✅ | ✅ |
+| 24h Reminder (Daily Cron @ 8AM) | ✅ | ✅ | — |
+
+Email formatting is handled by `utils/slotDateFormat.js`, which converts internal date keys like `5_3_2026` into readable strings like `5 March 2026`. The reminder job is bootstrapped in `server.js` via `utils/reminderCron.js`.

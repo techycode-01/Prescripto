@@ -34,11 +34,13 @@ The system supports three levels of authentication: **Patients**, who can regist
 *   **Secure Authentication**: JWT-based login and registration.
 *   **Profile Management**: Update personal details and medical history visibility.
 *   **Payment Integration**: Secure payment gateway integration (Razorpay) for booking fees.
+*   **Email Notifications**: Automatic booking confirmation, cancellation, and 24-hour reminder emails.
 
 ### 👨‍⚕️ Doctor Dashboard (<a href="https://prescripto-adminpanel.netlify.app" target="_blank">Live Demo</a>)
 *   **Appointment Management**: Accept, cancel, or complete patient appointments.
 *   **Schedule Control**: Dynamic availability setting to manage practicing hours.
 *   **Financial Overview**: Track earnings and completed consultations.
+*   **Email Notifications**: Automated alerts for new bookings, cancellations, and completed appointments.
 
 ### 🛡️ Admin Panel (<a href="https://prescripto-adminpanel.netlify.app" target="_blank">Live Demo</a>)
 *   **Provider Onboarding**: Add and verify new doctors and their credentials.
@@ -61,6 +63,7 @@ The system supports three levels of authentication: **Patients**, who can regist
 *   **Database**: MongoDB (NoSQL) with Mongoose ODM
 *   **Authentication**: JSON Web Tokens (JWT), Bcrypt (Password Hashing)
 *   **File Storage**: Cloudinary (Image management via Multer)
+*   **Email Service**: Nodemailer (Gmail SMTP for transactional emails)
 *   **Security**: CORS, Dotenv, Validator
 
 ## 5. System Architecture
@@ -214,6 +217,22 @@ Prescripto employs a highly secure, enterprise-grade security architecture:
     *   **NoSQL Injection Prevention**: Key query parameters are explicitly cast to Strings to nullify malicious MongoDB operators.
     *   **Path Traversal Prevention**: File uploads via Multer are sanitized and timestamped before saving.
 *   **Password & Payment Security**: User passwords are encrypted using `bcrypt` (cost factor 10). Payments are secured via Razorpay HMAC SHA256 Signature validations.
+
+## 12. Email Notification System
+
+Prescripto sends automated transactional emails via **Nodemailer** (Gmail SMTP) for every critical event in the appointment lifecycle:
+
+| Event | Patient | Doctor | Admin |
+|---|---|---|---|
+| Appointment Booked | ✅ Confirmation | ✅ New booking alert | ✅ System log |
+| Cancelled by Patient | ✅ Cancellation notice | ✅ Slot released notice | ✅ System log |
+| Cancelled by Doctor | ✅ Apology & rebook prompt | ✅ Confirmation | ✅ System log |
+| Cancelled by Admin | ✅ Apology notice | ✅ Slot released notice | ✅ System log |
+| Completed by Doctor | ✅ Completion & feedback | ✅ Confirmation | ✅ System log |
+| 24h Reminder (Daily Cron) | ✅ Reminder | ✅ Reminder | — |
+
+### Reminder Cron Job
+A `node-cron` scheduler runs **every day at 8:00 AM** server time. It scans the database for all upcoming non-cancelled appointments occurring within the next 24 hours and dispatches reminder emails to both the patient and the doctor automatically.
 
 ## 12. Build & Deployment
 
