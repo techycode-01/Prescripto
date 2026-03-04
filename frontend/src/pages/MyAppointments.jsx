@@ -75,6 +75,27 @@ const MyAppointment = () => {
     }
   };
 
+  const downloadPrescription = async (appointmentId) => {
+    try {
+      const response = await axios.get(
+        backendUrl + `/api/prescription/download/${appointmentId}`,
+        { headers: { token }, responseType: "blob" }
+      );
+      const url = window.URL.createObjectURL(
+        new Blob([response.data], { type: "application/pdf" })
+      );
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `prescription-${appointmentId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      toast.error("Prescription not yet available or failed to download.");
+    }
+  };
+
   const initPay = (order) => {
     const options = {
       key: import.meta.env.VITE_RAZORPAY_KEY_ID,
@@ -201,9 +222,17 @@ const MyAppointment = () => {
                 </button>
               )}
               {item.isCompleted && (
-                <button className="sm:min-w-48 py-2 border border-green-500 rounded text-green-500 cursor-pointer">
-                  Completed
-                </button>
+                <div className="flex flex-col gap-2">
+                  <button className="sm:min-w-48 py-2 border border-green-500 rounded text-green-500 cursor-default">
+                    Completed
+                  </button>
+                  <button
+                    onClick={() => downloadPrescription(item._id)}
+                    className="text-sm text-stone-500 text-center sm:min-w-48 py-2 border border-gray-200 hover:bg-primary hover:text-white cursor-pointer transition-all duration-300"
+                  >
+                    ⬇ Download Prescription
+                  </button>
+                </div>
               )}
             </div>
           </div>

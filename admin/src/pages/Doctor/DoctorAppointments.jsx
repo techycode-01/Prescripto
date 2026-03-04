@@ -1,9 +1,11 @@
 import React, { useContext, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { DoctorContext } from "../../context/DoctorContext";
 import { AppContext } from "../../context/AppContext";
 import { assets } from "../../assets/assets";
 
 const DoctorAppointments = () => {
+  const navigate = useNavigate();
   const {
     dToken,
     appointments,
@@ -23,19 +25,20 @@ const DoctorAppointments = () => {
       <p className="mb-3 text-lg font-medium">All Appointments</p>
 
       <div className="bg-white border rounded text-sm max-h-[80vh] min-h-[50vh] overflow-y-scroll">
-        <div className="max-sm:hidden grid grid-cols-[0.5fr_2fr_1fr_1fr_3fr_1fr_1fr] gap-1 p-3 px-6 border-b">
+        <div className="max-sm:hidden grid grid-cols-[0.5fr_2fr_1fr_1fr_3fr_1fr_1fr_1fr] gap-1 p-3 px-6 border-b">
           <p>#</p>
           <p>Patient</p>
           <p>Payment</p>
           <p>Age</p>
-          <p>Date & Time</p>
+          <p>Date &amp; Time</p>
           <p>Fees</p>
           <p>Action</p>
+          <p>Prescription</p>
         </div>
 
         {appointments.reverse().map((item, index) => (
           <div
-            className="flex flex-wrap justify-between max-sm:gap-5 max-sm:text-base sm:grid grid-cols-[0.5fr_2fr_1fr_1fr_3fr_1fr_1fr] gap-1 items-center text-gray-500 p-3 px-6 border-b hover:bg-gray-50 "
+            className="flex flex-wrap justify-between max-sm:gap-5 max-sm:text-base sm:grid grid-cols-[0.5fr_2fr_1fr_1fr_3fr_1fr_1fr_1fr] gap-1 items-center text-gray-500 p-3 px-6 border-b hover:bg-gray-50"
             key={index}
           >
             <p className="max-sm:hidden">{index + 1}</p>
@@ -49,7 +52,7 @@ const DoctorAppointments = () => {
             </div>
 
             <div>
-              <p className="text-xs inline border border-primary px-2 rounded-full ">
+              <p className="text-xs inline border border-primary px-2 rounded-full">
                 {item.payment ? "Online" : "Cash"}
               </p>
             </div>
@@ -61,6 +64,7 @@ const DoctorAppointments = () => {
               {currency}
               {item.amount}
             </p>
+
             {item.cancelled ? (
               <p className="text-red-400 text-xs font-medium">Cancelled</p>
             ) : item.isCompleted ? (
@@ -80,6 +84,18 @@ const DoctorAppointments = () => {
                   alt=""
                 />
               </div>
+            )}
+
+            {/* Prescription Column */}
+            {item.isCompleted ? (
+              <button
+                onClick={() => navigate(`/write-prescription/${item._id}`)}
+                className="text-xs text-primary border border-primary px-2 py-1 rounded-md hover:bg-blue-50 whitespace-nowrap w-fit"
+              >
+                ✎ Prescription
+              </button>
+            ) : (
+              <p className="text-gray-300 text-xs">—</p>
             )}
           </div>
         ))}

@@ -73,6 +73,52 @@ const DoctorContextProvider = (props) => {
     }
   };
 
+  const createPrescription = async (prescriptionData) => {
+    try {
+      const { data } = await axios.post(
+        backendUrl + "/api/prescription/create",
+        prescriptionData,
+        { headers: { dToken } }
+      );
+      return data;
+    } catch (error) {
+      console.log(error);
+      toast.error(error.message);
+      return { success: false };
+    }
+  };
+
+  const getPrescriptionByAppointment = async (appointmentId) => {
+    try {
+      const { data } = await axios.get(
+        backendUrl + `/api/prescription/doctor/appointment/${appointmentId}`,
+        { headers: { dToken } }
+      );
+      return data;
+    } catch (error) {
+      return { success: false };
+    }
+  };
+
+  const downloadPrescriptionPDF = async (appointmentId) => {
+    try {
+      const response = await axios.get(
+        backendUrl + `/api/prescription/doctor/download/${appointmentId}`,
+        { headers: { dToken }, responseType: "blob" }
+      );
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: "application/pdf" }));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `prescription-${appointmentId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      toast.error("Failed to download prescription.");
+    }
+  };
+
   const getDashData = async () => {
     try {
       const { data } = await axios.get(backendUrl + "/api/doctor/dashboard", {
@@ -148,6 +194,9 @@ const DoctorContextProvider = (props) => {
     getAppointments,
     completeAppointment,
     cancelAppointment,
+    createPrescription,
+    getPrescriptionByAppointment,
+    downloadPrescriptionPDF,
     dashData,
     setDashData,
     getDashData,
