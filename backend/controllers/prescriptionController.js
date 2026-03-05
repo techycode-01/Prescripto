@@ -76,6 +76,54 @@ const createPrescription = async (req, res) => {
     }
 };
 
+// ─── UPDATE PRESCRIPTION (Doctor only) ───────────────────────────────────────
+const updatePrescription = async (req, res) => {
+    try {
+        const docId = req.docId;
+        const { appointmentId, medicines, advice, followUpDate } = req.body;
+
+        if (!appointmentId || !medicines || !Array.isArray(medicines) || medicines.length === 0) {
+            return res.json({ success: false, message: "Appointment ID and at least one medicine are required." });
+        }
+
+        const prescription = await prescriptionModel.findOne({ appointmentId });
+        if (!prescription) {
+            return res.json({ success: false, message: "Prescription not found." });
+        }
+
+        if (prescription.docId !== docId) {
+            return res.status(403).json({ success: false, message: "Unauthorized: You can only update your own prescriptions." });
+        }
+
+        prescription.medicines = medicines;
+        prescription.advice = advice || "";
+        prescription.followUpDate = followUpDate || "";
+        await prescription.save();
+
+        // Send email notification to patient about the update
+        try {
+            const appointment = await appointmentModel.findById(appointmentId);
+            if (appointment) {
+                const { userData, docData, slotDate, slotTime } = appointment;
+                const dateStr = slotDateFormat(slotDate) + " at " + slotTime;
+                
+                await sendEmail({
+                    to: userData.email,
+                    subject: "Prescription Updated - Prescripto",
+                    text: `Dear ${userData.name},\n\nYour prescription from ${docData.name} for your appointment on ${dateStr} has been UPDATED.\n\nPlease log in to Prescripto and go to "My Appointments" to download your revised prescription PDF.\n\nThank you for choosing Prescripto!`,
+                });
+            }
+        } catch (emailErr) {
+            console.error("Error sending prescription update email:", emailErr);
+        }
+
+        res.json({ success: true, message: "Prescription updated successfully.", prescription });
+    } catch (error) {
+        console.error(error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
 // ─── GET PRESCRIPTION (Doctor or Patient) ────────────────────────────────────
 const getPrescription = async (req, res) => {
     try {
@@ -255,4 +303,4 @@ const downloadPrescription = async (req, res) => {
     }
 };
 
-export { createPrescription, getPrescription, downloadPrescription };
+export { createPrescription, updatePrescription, getPrescription, downloadPrescription };

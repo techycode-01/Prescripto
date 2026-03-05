@@ -8,7 +8,7 @@ const EMPTY_MEDICINE = { name: "", dosage: "", frequency: "", duration: "", note
 const WritePrescription = () => {
   const { appointmentId } = useParams();
   const navigate = useNavigate();
-  const { createPrescription, getPrescriptionByAppointment, downloadPrescriptionPDF } = useContext(DoctorContext);
+  const { createPrescription, updatePrescription, getPrescriptionByAppointment, downloadPrescriptionPDF } = useContext(DoctorContext);
 
   const [medicines, setMedicines] = useState([{ ...EMPTY_MEDICINE }]);
   const [advice, setAdvice] = useState("");
@@ -16,6 +16,7 @@ const WritePrescription = () => {
   const [loading, setLoading] = useState(false);
   const [existingPrescription, setExistingPrescription] = useState(null);
   const [checkingExisting, setCheckingExisting] = useState(true);
+  const [editMode, setEditMode] = useState(false);
 
   // On mount check if prescription already exists to show read-only mode
   useEffect(() => {
@@ -28,6 +29,14 @@ const WritePrescription = () => {
     };
     checkExisting();
   }, [appointmentId]);
+
+  const handleEditClick = () => {
+    // Populate form with existing data
+    setMedicines(existingPrescription.medicines.length > 0 ? existingPrescription.medicines : [{ ...EMPTY_MEDICINE }]);
+    setAdvice(existingPrescription.advice || "");
+    setFollowUpDate(existingPrescription.followUpDate || "");
+    setEditMode(true);
+  };
 
   const addMedicine = () => setMedicines((prev) => [...prev, { ...EMPTY_MEDICINE }]);
 
@@ -48,13 +57,24 @@ const WritePrescription = () => {
       }
     }
     setLoading(true);
-    const result = await createPrescription({ appointmentId, medicines, advice, followUpDate });
-    setLoading(false);
-    if (result.success) {
-      toast.success("Prescription issued successfully!");
-      navigate("/doctor-appointments");
+    let result;
+    if (editMode) {
+      result = await updatePrescription({ appointmentId, medicines, advice, followUpDate });
     } else {
-      toast.error(result.message || "Failed to create prescription.");
+      result = await createPrescription({ appointmentId, medicines, advice, followUpDate });
+    }
+    setLoading(false);
+
+    if (result.success) {
+      toast.success(editMode ? "Prescription updated successfully!" : "Prescription issued successfully!");
+      if (editMode) {
+        setExistingPrescription(result.prescription);
+        setEditMode(false);
+      } else {
+        navigate("/doctor-appointments");
+      }
+    } else {
+      toast.error(result.message || "Failed to save prescription.");
     }
   };
 
@@ -65,8 +85,8 @@ const WritePrescription = () => {
     return <div className="flex items-center justify-center h-60 text-gray-400">Loading...</div>;
   }
 
-  // ── Read-only view (prescription already exists) ──────────────────────────
-  if (existingPrescription) {
+  // ── Read-only view (prescription already exists and not in edit mode) ────
+  if (existingPrescription && !editMode) {
     const { doctorInfo, patientInfo, medicines: meds, advice: adv, followUpDate: fud } = existingPrescription;
     return (
       <div className="w-full max-w-4xl m-5">
@@ -75,16 +95,22 @@ const WritePrescription = () => {
             <h2 className="text-lg font-semibold text-gray-700">Prescription Already Issued</h2>
             <p className="text-sm text-gray-400">This prescription has been sent to the patient.</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 text-sm">
+            <button
+              onClick={handleEditClick}
+              className="border border-primary text-primary px-4 py-2 rounded-md hover:bg-blue-50"
+            >
+              ✎ Edit Prescription
+            </button>
             <button
               onClick={() => downloadPrescriptionPDF(appointmentId)}
-              className="bg-primary text-white text-sm px-4 py-2 rounded-md hover:opacity-90"
+              className="bg-primary text-white px-4 py-2 rounded-md hover:opacity-90 flex items-center gap-1"
             >
               ⬇ Download PDF
             </button>
             <button
               onClick={() => navigate("/doctor-appointments")}
-              className="border border-gray-300 text-sm px-4 py-2 rounded-md hover:bg-gray-50"
+              className="border border-gray-300 px-4 py-2 rounded-md hover:bg-gray-50"
             >
               ← Back
             </button>
@@ -124,15 +150,24 @@ const WritePrescription = () => {
     );
   }
 
-  // ── Write new prescription form ───────────────────────────────────────────
+  // ── Write / Edit prescription form ─────────────────────────────────────────
   return (
     <div className="w-full max-w-4xl m-5">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-lg font-semibold text-gray-700">Write Prescription</h2>
-          <p className="text-xs text-gray-400">The patient will be notified and can download the PDF from their portal.</p>
+          <h2 className="text-lg font-semibold text-gray-700">
+            {editMode ? "Edit Prescription" : "Write Prescription"}
+          </h2>
+          <p className="text-xs text-gray-400">
+            {editMode 
+              ? "Update the details below. Generating a new PDF will reflect these changes."
+              : "The patient will be notified and can download the PDF from their portal."}
+          </p>
         </div>
-        <button onClick={() => navigate("/doctor-appointments")} className="text-sm text-gray-500 hover:underline">
+        <button 
+          onClick={() => editMode ? setEditMode(false) : navigate("/doctor-appointments")} 
+          className="text-sm text-gray-500 hover:underline"
+        >
           ← Back
         </button>
       </div>
@@ -246,7 +281,7 @@ const WritePrescription = () => {
         <div className="flex justify-end gap-3 pt-2">
           <button
             type="button"
-            onClick={() => navigate("/doctor-appointments")}
+            onClick={() => editMode ? setEditMode(false) : navigate("/doctor-appointments")}
             className="border border-gray-300 px-5 py-2 rounded-md text-sm hover:bg-gray-50"
           >
             Cancel
@@ -256,7 +291,7 @@ const WritePrescription = () => {
             disabled={loading}
             className="bg-primary text-white px-6 py-2 rounded-md text-sm hover:opacity-90 disabled:opacity-60"
           >
-            {loading ? "Issuing..." : "Issue Prescription"}
+            {loading ? "Saving..." : (editMode ? "Update Prescription" : "Issue Prescription")}
           </button>
         </div>
       </form>

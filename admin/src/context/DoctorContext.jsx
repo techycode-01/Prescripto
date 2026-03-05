@@ -88,6 +88,21 @@ const DoctorContextProvider = (props) => {
     }
   };
 
+  const updatePrescription = async (prescriptionData) => {
+    try {
+      const { data } = await axios.post(
+        backendUrl + "/api/prescription/update",
+        prescriptionData,
+        { headers: { dToken } }
+      );
+      return data;
+    } catch (error) {
+      console.log(error);
+      toast.error(error.message);
+      return { success: false };
+    }
+  };
+
   const getPrescriptionByAppointment = async (appointmentId) => {
     try {
       const { data } = await axios.get(
@@ -195,6 +210,7 @@ const DoctorContextProvider = (props) => {
     completeAppointment,
     cancelAppointment,
     createPrescription,
+    updatePrescription,
     getPrescriptionByAppointment,
     downloadPrescriptionPDF,
     dashData,

@@ -1,6 +1,7 @@
 import express from "express";
 import {
     createPrescription,
+    updatePrescription,
     getPrescription,
     downloadPrescription,
 } from "../controllers/prescriptionController.js";
@@ -11,6 +12,9 @@ const prescriptionRouter = express.Router();
 
 // Doctor creates a prescription for a completed appointment
 prescriptionRouter.post("/create", authDoctor, createPrescription);
+
+// Doctor updates an existing prescription
+prescriptionRouter.post("/update", authDoctor, updatePrescription);
 
 // Both doctor and patient can GET a prescription
 prescriptionRouter.get("/appointment/:appointmentId", authUser, getPrescription);

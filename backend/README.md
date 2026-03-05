@@ -4,25 +4,26 @@ The **Prescripto Backend API** is the core business logic layer of the applicati
 
 ## 🛠️ Tech Stack & Key Modules
 
-*   **Runtime**: Node.js
-*   **Framework**: Express.js
-*   **Database**: MongoDB (via Mongoose ODM)
-*   **Authentication**: JSON Web Tokens (JWT) & Bcrypt
-*   **File Storage**: Cloudinary (Image Uploads via Multer)
-*   **Payment Gateway**: Razorpay Integration
-*   **Validation**: Validator.js
-*   **Security & Hardening**: Helmet, Express Rate Limit, CORS, Cookie Parser
-*   **Email Service**: Nodemailer (Gmail SMTP)
-*   **Task Scheduling**: Node-Cron (Appointment Reminders)
+- **Runtime**: Node.js
+- **Framework**: Express.js
+- **Database**: MongoDB (via Mongoose ODM)
+- **Authentication**: JSON Web Tokens (JWT) & Bcrypt
+- **File Storage**: Cloudinary (Image Uploads via Multer)
+- **Payment Gateway**: Razorpay Integration
+- **PDF Generation**: PDFKit
+- **Validation**: Validator.js
+- **Security & Hardening**: Helmet, Express Rate Limit, CORS, Cookie Parser
+- **Email Service**: Nodemailer (Gmail SMTP)
+- **Task Scheduling**: Node-Cron (Appointment Reminders)
 
 ## 📂 Project Structure
 
 ```
 backend/
 ├── config/              # Configuration for DB & Cloudinary
-├── controllers/         # Logic for API endpoints (User, Doctor, Admin)
+├── controllers/         # Logic for API endpoints (User, Doctor, Admin, Prescription)
 ├── middlewares/         # Auth verification (authAdmin, authUser, authDoctor) & Multer
-├── models/              # Mongoose Schemas (User, Doctor, Appointment)
+├── models/              # Mongoose Schemas (User, Doctor, Appointment, Prescription)
 ├── routes/              # API Route definitions
 ├── utils/               # Shared utilities (SendEmail, slotDateFormat, reminderCron)
 └── server.js            # Application entry point
@@ -39,26 +40,30 @@ The system implements Role-Based Access Control (RBAC) with three distinct roles
 Each request to a protected route must include a valid, short-lived `AccessToken` in the headers.
 
 ### Dual-Token Architecture
+
 The backend implements a highly secure authentication flow:
+
 1. **Access Token**: Short lifespan (15 minutes). Sent in the standard JSON response to authorize API access.
-2. **Refresh Token**: Long lifespan (7 days). Securely attached to the client via an **`HttpOnly` Cookie**, completely protecting it against XSS attacks. 
+2. **Refresh Token**: Long lifespan (7 days). Securely attached to the client via an **`HttpOnly` Cookie**, completely protecting it against XSS attacks.
 3. **Rotation Endpoints**: `/api/user/refresh` (and admin/doctor equivalents) silently validate the secure cookie and issue fresh Access Tokens on the fly.
 
 ## 🛡️ Advanced Security Features
 
-*   **Global Hardening**: `helmet` is configured to set tight HTTP headers, and `express-rate-limit` prevents brute-force logins and basic DDoS attempts.
-*   **Strict CORS Policy**: Discards wildcard origins in favor of explicit client arrays.
-*   **Mongoose Transactions**: `bookAppointment` flows use MongoDB session transactions to ensure atomic locking and eliminate double-booking race conditions.
-*   **Injection & Traversal Protection**: Explicit parameter casting blocks NoSQL injections, and Multer regex sanitization prevents Arbitrary File Writes on image uploads.
+- **Global Hardening**: `helmet` is configured to set tight HTTP headers, and `express-rate-limit` prevents brute-force logins and basic DDoS attempts.
+- **Strict CORS Policy**: Discards wildcard origins in favor of explicit client arrays.
+- **Mongoose Transactions**: `bookAppointment` flows use MongoDB session transactions to ensure atomic locking and eliminate double-booking race conditions.
+- **Injection & Traversal Protection**: Explicit parameter casting blocks NoSQL injections, and Multer regex sanitization prevents Arbitrary File Writes on image uploads.
 
 ## 🚀 Installation & Setup
 
 ### Prerequisites
-*   Node.js (v16.x or higher)
-*   MongoDB Atlas Account (or local instance)
-*   Cloudinary Account
+
+- Node.js (v16.x or higher)
+- MongoDB Atlas Account (or local instance)
+- Cloudinary Account
 
 ### 1. Install Dependencies
+
 Navigate to the backend directory and install required packages:
 
 ```bash
@@ -67,6 +72,7 @@ npm install
 ```
 
 ### 2. Environment Configuration
+
 Create a `.env` file in the root of the `backend` directory. Define the following variables:
 
 ```ini
@@ -99,34 +105,37 @@ SMTP_PASS=your_16_char_gmail_app_password
 ```
 
 ### 3. Start the Server
+
 Run the API server:
 
 ```bash
 npm start
 ```
+
 The server will start on port `4000`.
 
 For development with auto-reload (using Nodemon):
+
 ```bash
 npm run server
 ```
 
 ## ⚠️ Troubleshooting
 
-*   **Database Connection Error**: Verify your `MONGODB_URI` and ensure your IP is whitelisted in MongoDB Atlas.
-*   **Image Upload Failures**: Check your Cloudinary credentials in `.env`.
-*   **Authentication Issues**: Ensure the `JWT_SECRET` matches across environments if scaling horizontally.
-*   **Email Not Sending**: Ensure `SMTP_USER` and `SMTP_PASS` are set. `SMTP_PASS` must be a [Gmail App Password](https://myaccount.google.com/apppasswords) (not your regular Gmail password).
+- **Database Connection Error**: Verify your `MONGODB_URI` and ensure your IP is whitelisted in MongoDB Atlas.
+- **Image Upload Failures**: Check your Cloudinary credentials in `.env`.
+- **Authentication Issues**: Ensure the `JWT_SECRET` matches across environments if scaling horizontally.
+- **Email Not Sending**: Ensure `SMTP_USER` and `SMTP_PASS` are set. `SMTP_PASS` must be a [Gmail App Password](https://myaccount.google.com/apppasswords) (not your regular Gmail password).
 
 ## 📧 Email Notification System
 
 All transactional emails are dispatched by `utils/SendEmail.js` using **Nodemailer** and a Gmail SMTP transport.
 
-| Event | Patient | Doctor | Admin |
-|---|---|---|---|
-| Appointment Booked | ✅ | ✅ | ✅ |
-| Cancelled (by Patient/Doctor/Admin) | ✅ | ✅ | ✅ |
-| Completed by Doctor | ✅ | ✅ | ✅ |
-| 24h Reminder (Daily Cron @ 8AM) | ✅ | ✅ | — |
+| Event                               | Patient | Doctor | Admin |
+| ----------------------------------- | ------- | ------ | ----- |
+| Appointment Booked                  | ✅      | ✅     | ✅    |
+| Cancelled (by Patient/Doctor/Admin) | ✅      | ✅     | ✅    |
+| Completed by Doctor                 | ✅      | ✅     | ✅    |
+| 24h Reminder (Daily Cron @ 8AM)     | ✅      | ✅     | —     |
 
 Email formatting is handled by `utils/slotDateFormat.js`, which converts internal date keys like `5_3_2026` into readable strings like `5 March 2026`. The reminder job is bootstrapped in `server.js` via `utils/reminderCron.js`.
