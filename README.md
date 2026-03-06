@@ -282,7 +282,6 @@ A `node-cron` scheduler runs **every day at 8:00 AM** server time. It scans the 
 
 ### 🧩 Feature Expansion
 
-- **Prescriptions**: Digital prescription generation and PDF download.
 - **Chat System**: Real-time chat between doctor and patient.
 - **Telemedicine**: Integration of WebRTC for video consultations.
 - **Multi-language Support**: i18n integration for global accessibility.
