@@ -156,7 +156,7 @@ const Appointment = () => {
               <p>
                 {docInfo.degree} - {docInfo.speciality}
               </p>
-              <button className="py-0.5 px-2 border text-xs rounded-full">
+              <button className="py-0.5 px-2 border text-xs rounded-full cursor-pointer">
                 {docInfo.experience}
               </button>
             </div>
@@ -219,7 +219,7 @@ const Appointment = () => {
           </div>
           <button
             onClick={bookAppointment}
-            className="bg-primary text-white text-sm font-light px-14 py-3 rounded-full my-6"
+            className="bg-primary text-white text-sm font-light px-14 py-3 rounded-full my-6 cursor-pointer"
           >
             Book an appointment
           </button>

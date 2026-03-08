@@ -1,7 +1,9 @@
 import doctorModel from "../models/doctorModel.js"
+import userModel from "../models/userModel.js"
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
 import appointmentModel from "../models/appointmentModel.js"
+import prescriptionModel from "../models/prescriptionModel.js"
 import sendEmail from "../utils/SendEmail.js"
 import slotDateFormat from "../utils/slotDateFormat.js"
 
@@ -281,6 +283,46 @@ const doctorLogout = async (req, res) => {
     }
 }
 
+// API to get patient profile for doctor
+const getPatientProfile = async (req, res) => {
+    try {
+        const { patientId } = req.params;
+        const patientData = await userModel.findById(patientId).select("-password")
+
+        res.json({ success: true, patientData })
+
+    } catch (error) {
+        console.log(error)
+        res.json({ success: false, message: error.message })
+    }
+}
+
+// API to get patient appointments for doctor profile view
+const getPatientAppointmentsDoctor = async (req, res) => {
+    try {
+        const docId = req.docId;
+        const { patientId } = req.params;
+        const appointments = await appointmentModel.find({ docId, userId: patientId }).sort({ date: -1 });
+        res.json({ success: true, appointments });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+}
+
+// API to get patient prescriptions for doctor profile view
+const getPatientPrescriptionsDoctor = async (req, res) => {
+    try {
+        const docId = req.docId;
+        const { patientId } = req.params;
+        const prescriptions = await prescriptionModel.find({ docId, userId: patientId }).sort({ createdAt: -1 });
+        res.json({ success: true, prescriptions });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+}
+
 export {
     changeAvailability,
     doctorList,
@@ -292,5 +334,8 @@ export {
     doctorProfile,
     updateDoctorProfile,
     doctorRefreshToken,
-    doctorLogout
+    doctorLogout,
+    getPatientProfile,
+    getPatientAppointmentsDoctor,
+    getPatientPrescriptionsDoctor
 }

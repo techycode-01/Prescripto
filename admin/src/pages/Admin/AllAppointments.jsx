@@ -1,9 +1,11 @@
 import React, { useContext, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { AdminContext } from "../../context/AdminContext";
 import { AppContext } from "../../context/AppContext";
 import { assets } from "../../assets/assets";
 
 const AllAppointments = () => {
+  const navigate = useNavigate();
   const { aToken, appointments, getAllAppointments, cancelAppointment } =
     useContext(AdminContext);
   const { calculateAge, slotDateFormat, currency } = useContext(AppContext);
@@ -34,7 +36,10 @@ const AllAppointments = () => {
             key={index}
           >
             <p className="max-sm:hidden">{index + 1}</p>
-            <div className="flex items-center gap-2">
+            <div 
+              onClick={() => navigate(`/admin-patient-profile/${item.userData._id}`)}
+              className="flex items-center gap-2 cursor-pointer hover:text-primary transition-all"
+            >
               <img
                 className="w-8 rounded-full"
                 src={item.userData.image}
@@ -46,7 +51,10 @@ const AllAppointments = () => {
             <p>
               {slotDateFormat(item.slotDate)}, {item.slotTime}
             </p>
-            <div className="flex items-center gap-2">
+            <div 
+              onClick={() => navigate(`/admin-doctor-profile/${item.docData._id}`)}
+              className="flex items-center gap-2 cursor-pointer hover:text-primary transition-all"
+            >
               <img
                 className="w-8 rounded-full bg-gray-200"
                 src={item.docData.image}

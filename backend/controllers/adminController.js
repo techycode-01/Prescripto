@@ -3,6 +3,7 @@ import bcrypt from "bcrypt"
 import { v2 as cloudinary } from "cloudinary"
 import doctorModel from "../models/doctorModel.js"
 import appointmentModel from "../models/appointmentModel.js"
+import prescriptionModel from "../models/prescriptionModel.js"
 import userModel from "../models/userModel.js"
 import jwt from "jsonwebtoken"
 import sendEmail from "../utils/SendEmail.js"
@@ -202,6 +203,20 @@ const adminDashboard = async (req, res) => {
   }
 }
 
+// API to get patient profile for admin
+const getPatientProfile = async (req, res) => {
+    try {
+        const { patientId } = req.params;
+        const patientData = await userModel.findById(patientId).select("-password")
+
+        res.json({ success: true, patientData })
+
+    } catch (error) {
+        console.log(error)
+        res.json({ success: false, message: error.message })
+    }
+}
+
 // API for admin refresh token
 const adminRefreshToken = async (req, res) => {
   try {
@@ -239,4 +254,28 @@ const adminLogout = async (req, res) => {
   }
 }
 
-export { addDoctor, loginAdmin, allDoctors, appointmentsAdmin, appointmentCancel, adminDashboard, adminRefreshToken, adminLogout }
+// API to get patient appointments for admin profile view
+const getPatientAppointmentsAdmin = async (req, res) => {
+    try {
+        const { patientId } = req.params;
+        const appointments = await appointmentModel.find({ userId: patientId }).sort({ date: -1 });
+        res.json({ success: true, appointments });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+}
+
+// API to get patient prescriptions for admin profile view
+const getPatientPrescriptionsAdmin = async (req, res) => {
+    try {
+        const { patientId } = req.params;
+        const prescriptions = await prescriptionModel.find({ userId: patientId }).sort({ createdAt: -1 });
+        res.json({ success: true, prescriptions });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+}
+
+export { addDoctor, loginAdmin, allDoctors, appointmentsAdmin, appointmentCancel, adminDashboard, adminRefreshToken, adminLogout, getPatientProfile, getPatientAppointmentsAdmin, getPatientPrescriptionsAdmin }

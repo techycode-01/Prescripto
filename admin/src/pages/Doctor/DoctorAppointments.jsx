@@ -42,7 +42,10 @@ const DoctorAppointments = () => {
             key={index}
           >
             <p className="max-sm:hidden">{index + 1}</p>
-            <div className="flex items-center gap-2">
+            <div
+              onClick={() => navigate(`/patient-profile/${item.userData._id}`)}
+              className="flex items-center gap-2 cursor-pointer hover:text-primary transition-all"
+            >
               <img
                 className="w-8 rounded-full"
                 src={item.userData.image}
@@ -90,9 +93,9 @@ const DoctorAppointments = () => {
             {item.isCompleted ? (
               <button
                 onClick={() => navigate(`/write-prescription/${item._id}`)}
-                className="text-xs text-primary border border-primary px-2 py-1 rounded-md hover:bg-blue-50 whitespace-nowrap w-fit"
+                className="text-xs text-primary border border-primary px-2 py-1 rounded-md hover:bg-blue-50 whitespace-nowrap w-fit cursor-pointer"
               >
-                ✎ Prescription
+                Prescription
               </button>
             ) : (
               <p className="text-gray-300 text-xs">—</p>

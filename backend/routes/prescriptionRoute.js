@@ -7,6 +7,7 @@ import {
 } from "../controllers/prescriptionController.js";
 import authDoctor from "../middlewares/authDoctor.js";
 import authUser from "../middlewares/authUser.js";
+import authAdmin from "../middlewares/authAdmin.js";
 
 const prescriptionRouter = express.Router();
 
@@ -23,5 +24,7 @@ prescriptionRouter.get("/doctor/appointment/:appointmentId", authDoctor, getPres
 // Both doctor and patient can DOWNLOAD the PDF
 prescriptionRouter.get("/download/:appointmentId", authUser, downloadPrescription);
 prescriptionRouter.get("/doctor/download/:appointmentId", authDoctor, downloadPrescription);
+// Admin can DOWNLOAD the PDF
+prescriptionRouter.get("/admin/download/:appointmentId", authAdmin, downloadPrescription);
 
 export default prescriptionRouter;

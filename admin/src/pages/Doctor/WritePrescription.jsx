@@ -98,19 +98,19 @@ const WritePrescription = () => {
           <div className="flex gap-2 text-sm">
             <button
               onClick={handleEditClick}
-              className="border border-primary text-primary px-4 py-2 rounded-md hover:bg-blue-50"
+              className="border border-primary text-primary px-4 py-2 rounded-md hover:bg-blue-50 cursor-pointer"
             >
               ✎ Edit Prescription
             </button>
             <button
               onClick={() => downloadPrescriptionPDF(appointmentId)}
-              className="bg-primary text-white px-4 py-2 rounded-md hover:opacity-90 flex items-center gap-1"
+              className="bg-primary text-white px-4 py-2 rounded-md hover:opacity-90 flex items-center gap-1 cursor-pointer"
             >
               ⬇ Download PDF
             </button>
             <button
               onClick={() => navigate("/doctor-appointments")}
-              className="border border-gray-300 px-4 py-2 rounded-md hover:bg-gray-50"
+              className="border border-gray-300 px-4 py-2 rounded-md hover:bg-gray-50 cursor-pointer"
             >
               ← Back
             </button>
@@ -166,7 +166,7 @@ const WritePrescription = () => {
         </div>
         <button 
           onClick={() => editMode ? setEditMode(false) : navigate("/doctor-appointments")} 
-          className="text-sm text-gray-500 hover:underline"
+          className="text-sm text-gray-500 hover:underline cursor-pointer"
         >
           ← Back
         </button>
@@ -234,7 +234,7 @@ const WritePrescription = () => {
                     <button
                       type="button"
                       onClick={() => removeMedicine(idx)}
-                      className="text-red-400 hover:text-red-600 text-lg leading-none px-2"
+                      className="text-red-400 hover:text-red-600 text-lg leading-none px-2 cursor-pointer"
                       title="Remove"
                     >
                       ✕
@@ -247,7 +247,7 @@ const WritePrescription = () => {
           <button
             type="button"
             onClick={addMedicine}
-            className="mt-3 text-sm text-primary border border-primary rounded-md px-3 py-1 hover:bg-blue-50"
+            className="mt-3 text-sm text-primary border border-primary rounded-md px-3 py-1 hover:bg-blue-50 cursor-pointer"
           >
             + Add Medicine
           </button>
@@ -282,14 +282,14 @@ const WritePrescription = () => {
           <button
             type="button"
             onClick={() => editMode ? setEditMode(false) : navigate("/doctor-appointments")}
-            className="border border-gray-300 px-5 py-2 rounded-md text-sm hover:bg-gray-50"
+            className="border border-gray-300 px-5 py-2 rounded-md text-sm hover:bg-gray-50 cursor-pointer"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={loading}
-            className="bg-primary text-white px-6 py-2 rounded-md text-sm hover:opacity-90 disabled:opacity-60"
+            className="bg-primary text-white px-6 py-2 rounded-md text-sm hover:opacity-90 disabled:opacity-60 cursor-pointer"
           >
             {loading ? "Saving..." : (editMode ? "Update Prescription" : "Issue Prescription")}
           </button>

@@ -69,7 +69,7 @@ const DoctorProfile = () => {
               <p>
                 {profileData.degree}-{profileData.speciality}
               </p>
-              <button className="py-0.5 px-2 border text-xs rounded-full">
+              <button className="py-0.5 px-2 border text-xs rounded-full cursor-pointer">
                 {profileData.experience}
               </button>
             </div>
@@ -98,6 +98,7 @@ const DoctorProfile = () => {
                       }))
                     }
                     value={profileData.fees}
+                    className="bg-gray-50 border border-gray-300 rounded px-2 py-1 ml-2 max-w-24 focus:outline-none focus:border-primary"
                   />
                 ) : (
                   profileData.fees
@@ -118,6 +119,7 @@ const DoctorProfile = () => {
                       }))
                     }
                     value={profileData.address.line1}
+                    className="bg-gray-50 border border-gray-300 rounded px-2 py-1 mb-1 w-full focus:outline-none focus:border-primary"
                   />
                 ) : (
                   profileData.address.line1
@@ -133,6 +135,7 @@ const DoctorProfile = () => {
                       }))
                     }
                     value={profileData.address.line2}
+                    className="bg-gray-50 border border-gray-300 rounded px-2 py-1 w-full focus:outline-none focus:border-primary"
                   />
                 ) : (
                   profileData.address.line2
@@ -153,21 +156,22 @@ const DoctorProfile = () => {
                 type="checkbox"
                 name=""
                 id=""
+                className="cursor-pointer"
               />
-              <label htmlFor="">Available</label>
+              <label htmlFor="" className="cursor-pointer">Available</label>
             </div>
 
             {isEdit ? (
               <button
                 onClick={updatedProfile}
-                className="px-4 py-1 border border-primary text-sm rounded-full mt-5 hover:bg-primary hover:text-white transition-all"
+                className="px-4 py-1 border border-primary text-sm rounded-full mt-5 hover:bg-primary hover:text-white transition-all cursor-pointer"
               >
                 Save
               </button>
             ) : (
               <button
                 onClick={() => setIsEdit(true)}
-                className="px-4 py-1 border border-primary text-sm rounded-full mt-5 hover:bg-primary hover:text-white transition-all"
+                className="px-4 py-1 border border-primary text-sm rounded-full mt-5 hover:bg-primary hover:text-white transition-all cursor-pointer"
               >
                 Edit
               </button>

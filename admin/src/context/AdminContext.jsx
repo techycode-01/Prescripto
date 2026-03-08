@@ -16,6 +16,9 @@ const AdminContextProvider = (props) => {
     patients: 0,
     latestAppointments: [],
   });
+  const [patientData, setPatientData] = useState(false);
+  const [patientAppointments, setPatientAppointments] = useState([]);
+  const [patientPrescriptions, setPatientPrescriptions] = useState([]);
 
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
@@ -105,6 +108,76 @@ const AdminContextProvider = (props) => {
     }
   };
 
+  const getPatientProfile = async (patientId) => {
+    try {
+      const { data } = await axios.get(
+        backendUrl + `/api/admin/patient-profile/${patientId}`,
+        { headers: { aToken } }
+      );
+      if (data.success) {
+        setPatientData(data.patientData);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error(error.message);
+    }
+  };
+
+  const getPatientAppointments = async (patientId) => {
+    try {
+      const { data } = await axios.get(
+        backendUrl + `/api/admin/patient-appointments/${patientId}`,
+        { headers: { aToken } }
+      );
+      if (data.success) {
+        setPatientAppointments(data.appointments);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error(error.message);
+    }
+  };
+
+  const getPatientPrescriptions = async (patientId) => {
+    try {
+      const { data } = await axios.get(
+        backendUrl + `/api/admin/patient-prescriptions/${patientId}`,
+        { headers: { aToken } }
+      );
+      if (data.success) {
+        setPatientPrescriptions(data.prescriptions);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error(error.message);
+    }
+  };
+
+  const downloadPrescriptionPDF = async (appointmentId) => {
+    try {
+      const response = await axios.get(
+        backendUrl + `/api/prescription/admin/download/${appointmentId}`,
+        { headers: { aToken }, responseType: "blob" }
+      );
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: "application/pdf" }));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `prescription-${appointmentId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      toast.error("Failed to download prescription.");
+    }
+  };
+
   const value = {
     aToken,
     setAToken,
@@ -118,6 +191,13 @@ const AdminContextProvider = (props) => {
     cancelAppointment,
     dashData,
     getDashData,
+    patientData,
+    getPatientProfile,
+    patientAppointments,
+    getPatientAppointments,
+    patientPrescriptions,
+    getPatientPrescriptions,
+    downloadPrescriptionPDF,
   };
 
   useEffect(() => {
