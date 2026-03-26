@@ -67,8 +67,14 @@ const AppContextProvider = (props) => {
       async (error) => {
         const originalRequest = error.config;
         
-        // If 401 Unauthorized, we haven't already retried, and it's NOT the refresh endpoint itself
-        if (error.response && error.response.status === 401 && !originalRequest._retry && !originalRequest.url.includes('/refresh')) {
+        // Only trigger if a 401 error occurs, it's not a retry, and the original request had the User "token"
+        if (
+          error.response &&
+          error.response.status === 401 &&
+          !originalRequest._retry &&
+          !originalRequest.url.includes('/refresh') &&
+          (originalRequest.headers.token || originalRequest.headers.get?.("token"))
+        ) {
           originalRequest._retry = true;
           
           try {
@@ -81,8 +87,14 @@ const AppContextProvider = (props) => {
               setToken(data.token);
               localStorage.setItem("token", data.token);
               
-              // Update the failed request with the new token and retry it
-              originalRequest.headers.token = data.token;
+              // Update the failed request with the new token and retry it.
+              // Axios 1.x uses AxiosHeaders, so we must use .set()
+              if (originalRequest.headers.set) {
+                originalRequest.headers.set("token", data.token);
+              } else {
+                originalRequest.headers.token = data.token;
+              }
+
               return axios(originalRequest);
             }
           } catch (refreshError) {

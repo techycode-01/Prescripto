@@ -226,7 +226,14 @@ const DoctorContextProvider = (props) => {
       async (error) => {
         const originalRequest = error.config;
         
-        if (error.response && error.response.status === 401 && !originalRequest._retry && !originalRequest.url.includes('/refresh')) {
+        // Only trigger if a 401 error occurs, it's not a retry, and the original request had the Doctor "dToken"
+        if (
+          error.response &&
+          error.response.status === 401 &&
+          !originalRequest._retry &&
+          !originalRequest.url.includes('/refresh') &&
+          (originalRequest.headers.dToken || originalRequest.headers.get?.("dToken") || originalRequest.headers.dtoken || originalRequest.headers.get?.("dtoken"))
+        ) {
           originalRequest._retry = true;
           try {
             const { data } = await axios.get(backendUrl + "/api/doctor/refresh", {
@@ -236,7 +243,13 @@ const DoctorContextProvider = (props) => {
             if (data.success) {
               setDToken(data.token);
               localStorage.setItem("dToken", data.token);
-              originalRequest.headers.dToken = data.token;
+              
+              if (originalRequest.headers.set) {
+                originalRequest.headers.set("dToken", data.token);
+              } else {
+                originalRequest.headers.dToken = data.token;
+              }
+
               return axios(originalRequest);
             }
           } catch (refreshError) {

@@ -208,7 +208,14 @@ const AdminContextProvider = (props) => {
       async (error) => {
         const originalRequest = error.config;
         
-        if (error.response && error.response.status === 401 && !originalRequest._retry && !originalRequest.url.includes('/refresh')) {
+        // Only trigger if a 401 error occurs, it's not a retry, and the original request had the Admin "aToken"
+        if (
+          error.response &&
+          error.response.status === 401 &&
+          !originalRequest._retry &&
+          !originalRequest.url.includes('/refresh') &&
+          (originalRequest.headers.aToken || originalRequest.headers.get?.("aToken") || originalRequest.headers.atoken || originalRequest.headers.get?.("atoken"))
+        ) {
           originalRequest._retry = true;
           try {
             const { data } = await axios.get(backendUrl + "/api/admin/refresh", {
@@ -218,7 +225,13 @@ const AdminContextProvider = (props) => {
             if (data.success) {
               setAToken(data.token);
               localStorage.setItem("aToken", data.token);
-              originalRequest.headers.aToken = data.token;
+              
+              if (originalRequest.headers.set) {
+                originalRequest.headers.set("aToken", data.token);
+              } else {
+                originalRequest.headers.aToken = data.token;
+              }
+
               return axios(originalRequest);
             }
           } catch (refreshError) {
